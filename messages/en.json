@@ -1,0 +1,10 @@
+{
+  "common": {
+    "title": "SPOT — Project Management",
+    "description": "Advanced project management system"
+  },
+  "home": {
+    "heading": "Welcome to SPOT",
+    "subtitle": "Your project management workspace"
+  }
+}
