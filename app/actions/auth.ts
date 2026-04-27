@@ -1,8 +1,10 @@
 "use server";
 
 import bcrypt from "bcryptjs";
-import { signUpSchema } from "@/lib/validations/auth";
+import { AuthError } from "next-auth";
+import { signUpSchema, signInSchema } from "@/lib/validations/auth";
 import { prisma } from "@/lib/prisma";
+import { signIn as nextAuthSignIn } from "@/auth";
 
 export type AuthActionResult = {
   success: boolean;
@@ -54,4 +56,43 @@ export async function signUp(
   });
 
   return { success: true };
+}
+
+export async function signIn(
+  _prevState: AuthActionResult | null,
+  formData: FormData,
+): Promise<AuthActionResult> {
+  const rawData = {
+    email: formData.get("email") as string,
+    password: formData.get("password") as string,
+  };
+
+  const validated = signInSchema.safeParse(rawData);
+
+  if (!validated.success) {
+    return {
+      success: false,
+      error: validated.error.issues[0]?.message ?? "invalidData",
+    };
+  }
+
+  try {
+    await nextAuthSignIn("credentials", {
+      email: validated.data.email,
+      password: validated.data.password,
+      redirect: false,
+    });
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          return { success: false, error: "invalidCredentials" };
+        default:
+          return { success: false, error: "invalidData" };
+      }
+    }
+    throw error;
+  }
 }

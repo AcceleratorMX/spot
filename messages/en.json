@@ -16,6 +16,7 @@
       "passwordTooLong": "Password is too long",
       "passwordRequired": "Password is required",
       "invalidData": "Invalid data provided",
+      "invalidCredentials": "Invalid email or password",
       "userExists": "User with this email already exists"
     }
   }

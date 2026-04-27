@@ -16,6 +16,7 @@
       "passwordTooLong": "Пароль занадто довгий",
       "passwordRequired": "Пароль обов'язковий",
       "invalidData": "Надані невірні дані",
+      "invalidCredentials": "Невірний email або пароль",
       "userExists": "Користувач з таким email вже існує"
     }
   }
