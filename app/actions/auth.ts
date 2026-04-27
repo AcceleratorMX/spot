@@ -26,7 +26,7 @@ export async function signUp(
   if (!validated.success) {
     return {
       success: false,
-      error: validated.error.issues[0]?.message ?? "Невірні дані",
+      error: validated.error.issues[0]?.message ?? "invalidData",
     };
   }
 
@@ -39,7 +39,7 @@ export async function signUp(
   if (existingUser) {
     return {
       success: false,
-      error: "Користувач з таким email вже існує",
+      error: "userExists",
     };
   }
 

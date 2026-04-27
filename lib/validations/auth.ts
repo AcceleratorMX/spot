@@ -3,18 +3,18 @@ import { z } from "zod";
 export const signUpSchema = z.object({
   name: z
     .string()
-    .min(2, "Ім'я повинно містити мінімум 2 символи")
-    .max(100, "Ім'я занадто довге"),
-  email: z.string().email("Невірний формат email"),
+    .min(2, "nameTooShort")
+    .max(100, "nameTooLong"),
+  email: z.string().email("invalidEmail"),
   password: z
     .string()
-    .min(8, "Пароль повинен містити мінімум 8 символів")
-    .max(128, "Пароль занадто довгий"),
+    .min(8, "passwordTooShort")
+    .max(128, "passwordTooLong"),
 });
 
 export const signInSchema = z.object({
-  email: z.string().email("Невірний формат email"),
-  password: z.string().min(1, "Пароль обов'язковий"),
+  email: z.string().email("invalidEmail"),
+  password: z.string().min(1, "passwordRequired"),
 });
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
