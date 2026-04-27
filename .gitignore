@@ -45,4 +45,9 @@ app/generated/
 *.tsbuildinfo
 next-env.d.ts
 
+# testing
+/test-results/
+/playwright-report/
+/blob-report/
+
 /app/generated/prisma

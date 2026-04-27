@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint-and-build:
-    name: Lint & Build
+    name: Lint, Test & Build
     runs-on: ubuntu-latest
 
     steps:
@@ -33,6 +33,9 @@ jobs:
 
       - name: Lint
         run: pnpm lint
+
+      - name: Unit tests
+        run: pnpm test
 
       - name: Build
         run: pnpm build
