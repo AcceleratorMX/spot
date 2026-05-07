@@ -10,9 +10,6 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
 # next.js
 /.next/
 /out/
@@ -46,6 +43,7 @@ app/generated/
 next-env.d.ts
 
 # testing
+/coverage
 /test-results/
 /playwright-report/
 /blob-report/
