@@ -3,14 +3,13 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-// Mock next-themes
+// Mock custom theme provider
 const mockSetTheme = vi.fn();
-vi.mock("next-themes", () => ({
+vi.mock("@/components/theme-provider", () => ({
   useTheme: () => ({
     theme: "light",
     setTheme: mockSetTheme,
   }),
-  ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock next-intl

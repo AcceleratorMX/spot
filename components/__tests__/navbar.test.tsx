@@ -31,8 +31,8 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/en/dashboard",
 }));
 
-// Mock next-themes
-vi.mock("next-themes", () => ({
+// Mock custom theme provider
+vi.mock("@/components/theme-provider", () => ({
   useTheme: () => ({
     theme: "light",
     setTheme: vi.fn(),
