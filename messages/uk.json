@@ -19,5 +19,26 @@
       "invalidCredentials": "Невірний email або пароль",
       "userExists": "Користувач з таким email вже існує"
     }
+  },
+  "nav": {
+    "dashboard": "Панель",
+    "boards": "Дошки",
+    "settings": "Налаштування",
+    "signOut": "Вийти",
+    "signIn": "Увійти",
+    "signUp": "Зареєструватися",
+    "toggleSidebar": "Перемкнути бічну панель",
+    "profile": "Профіль",
+    "language": "Мова",
+    "theme": "Тема",
+    "light": "Світла",
+    "dark": "Темна",
+    "system": "Системна"
+  },
+  "dashboard": {
+    "heading": "Панель",
+    "subtitle": "Огляд ваших проєктів та дошок",
+    "noBoards": "Ще немає дошок",
+    "createFirst": "Створіть першу дошку, щоб почати"
   }
 }

@@ -19,5 +19,26 @@
       "invalidCredentials": "Invalid email or password",
       "userExists": "User with this email already exists"
     }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "boards": "Boards",
+    "settings": "Settings",
+    "signOut": "Sign Out",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "toggleSidebar": "Toggle sidebar",
+    "profile": "Profile",
+    "language": "Language",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "dashboard": {
+    "heading": "Dashboard",
+    "subtitle": "Overview of your projects and boards",
+    "noBoards": "No boards yet",
+    "createFirst": "Create your first board to get started"
   }
 }
