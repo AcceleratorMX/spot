@@ -52,7 +52,7 @@ jobs:
         run: pnpm exec prisma generate
 
       - name: Push database schema
-        run: pnpm exec prisma db push --skip-generate
+        run: pnpm exec prisma db push
 
       - name: Lint
         run: pnpm lint
