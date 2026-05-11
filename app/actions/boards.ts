@@ -40,7 +40,19 @@ const boardInclude = {
   }
 } satisfies Prisma.BoardDefaultArgs;
 
+const boardSummaryInclude = {
+  include: {
+    members: {
+      include: {
+        user: true
+      }
+    },
+    labels: true
+  }
+} satisfies Prisma.BoardDefaultArgs;
+
 export type BoardWithRelations = Prisma.BoardGetPayload<typeof boardInclude>;
+export type BoardSummaryWithRelations = Prisma.BoardGetPayload<typeof boardSummaryInclude>;
 
 export async function getBoards() {
   const session = await auth();
@@ -57,21 +69,9 @@ export async function getBoards() {
       ]
     },
     orderBy: {
-      createdAt: "desc",
+      updatedAt: "desc",
     },
-    include: {
-      members: {
-        include: {
-          user: {
-            select: {
-              name: true,
-              email: true,
-              image: true
-            }
-          }
-        }
-      }
-    }
+    ...boardSummaryInclude
   });
 }
 

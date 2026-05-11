@@ -9,6 +9,7 @@ import { updateBoard } from "@/app/actions/boards";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -27,10 +28,19 @@ type BoardSettingsDialogProps = {
     description: string | null;
     labels: { id: string; name: string; color: string }[];
   };
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
-export function BoardSettingsDialog({ board }: BoardSettingsDialogProps) {
-  const [open, setOpen] = useState(false);
+export function BoardSettingsDialog({ 
+  board,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange 
+}: BoardSettingsDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = controlledOnOpenChange ?? setInternalOpen;
+  
   const [loading, setLoading] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
   const [newLabelColor, setNewLabelColor] = useState("#3b82f6");
@@ -64,14 +74,19 @@ export function BoardSettingsDialog({ board }: BoardSettingsDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Settings className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
+      {controlledOpen === undefined && (
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <Settings className="h-4 w-4" />
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{t("boardSettings") || "Board Settings"}</DialogTitle>
+          <DialogDescription className="sr-only">
+            Manage board metadata and labels.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6 py-4">

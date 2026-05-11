@@ -54,13 +54,11 @@ export function CreateBoardDialog() {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{t("newBoard")}</DialogTitle>
+          <DialogDescription>{t("subtitle")}</DialogDescription>
+        </DialogHeader>
         <form onSubmit={onSubmit}>
-          <DialogHeader>
-            <DialogTitle>{t("newBoard")}</DialogTitle>
-            <DialogDescription>
-              {t("subtitle")}
-            </DialogDescription>
-          </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="title">{t("boardTitle")}</Label>

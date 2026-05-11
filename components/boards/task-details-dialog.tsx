@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { updateTask, deleteTask, createSubtask, toggleSubtask, deleteSubtask } from "@/app/actions/tasks";
 import { addTaskLabel, removeTaskLabel } from "@/app/actions/labels";
+import { useRouter } from "next/navigation";
 import { Priority } from "@prisma/client";
 import { Plus, X } from "lucide-react";
 
@@ -69,27 +70,33 @@ export function TaskDetailsDialog({
 }: TaskDetailsDialogProps) {
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [selectedAssignees, setSelectedAssignees] = useState<string[]>(
-    task.participants.map((a) => a.userId)
+  const [selectedAssignees, setSelectedAssignees] = useState(
+    task.participants.map((p) => p.userId)
   );
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description || "");
+  const [priority, setPriority] = useState<Priority>(task.priority);
+  const [dueDate, setDueDate] = useState(task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "");
+  const router = useRouter();
+
+  useEffect(() => {
+    setSelectedAssignees(task.participants.map((p) => p.userId));
+    setTitle(task.title);
+    setDescription(task.description || "");
+    setPriority(task.priority);
+    setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "");
+  }, [task]);
   const t = useTranslations("boards");
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
 
-    const formData = new FormData(event.currentTarget);
-    const title = formData.get("title") as string;
-    const description = formData.get("description") as string;
-    const priority = formData.get("priority") as Priority;
-    const dueDateStr = formData.get("dueDate") as string;
-    const dueDate = dueDateStr ? new Date(dueDateStr) : null;
-
     await updateTask(task.id, boardId, {
       title,
       description,
       priority,
-      dueDate,
+      dueDate: dueDate ? new Date(dueDate) : null,
       assigneeUserIds: selectedAssignees,
     });
 
@@ -104,12 +111,14 @@ export function TaskDetailsDialog({
     onOpenChange(false);
   };
 
-  const toggleAssignee = (userId: string) => {
-    setSelectedAssignees((prev) =>
-      prev.includes(userId)
-        ? prev.filter((id) => id !== userId)
-        : [...prev, userId]
-    );
+  const toggleAssignee = async (userId: string) => {
+    const newAssignees = selectedAssignees.includes(userId)
+      ? selectedAssignees.filter((id) => id !== userId)
+      : [...selectedAssignees, userId];
+    
+    setSelectedAssignees(newAssignees);
+    await updateTask(task.id, boardId, { assigneeUserIds: newAssignees });
+    router.refresh();
   };
 
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
@@ -117,67 +126,75 @@ export function TaskDetailsDialog({
     if (!newSubtaskTitle.trim()) return;
     await createSubtask(task.id, newSubtaskTitle, boardId);
     setNewSubtaskTitle("");
+    router.refresh();
   };
 
   const handleToggleSubtask = async (id: string, isDone: boolean) => {
     await toggleSubtask(id, isDone, boardId);
+    router.refresh();
   };
 
   const handleDeleteSubtask = async (id: string) => {
     await deleteSubtask(id, boardId);
+    router.refresh();
   };
 
   const handleToggleLabel = async (labelId: string) => {
-    const isAssigned = task.labels.some((l) => l.label.id === labelId);
-    if (isAssigned) {
+    const isSelected = task.labels.some((tl) => tl.label.id === labelId);
+    if (isSelected) {
       await removeTaskLabel(task.id, labelId, boardId);
     } else {
       await addTaskLabel(task.id, labelId, boardId);
     }
+    router.refresh();
   };
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("taskTitle")}</DialogTitle>
+            <DialogDescription className="sr-only">
+              {t("addTaskDesc")}
+            </DialogDescription>
+          </DialogHeader>
           <form onSubmit={onSubmit}>
-            <DialogHeader>
-              <DialogTitle>{t("taskTitle")}</DialogTitle>
-              <DialogDescription>{t("addTaskDesc")}</DialogDescription>
-            </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="title">{t("taskTitle")}</Label>
                 <Input
                   id="title"
-                  name="title"
-                  defaultValue={task.title}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                   required
-                  disabled={loading}
                 />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="description">{t("description")}</Label>
                 <Textarea
                   id="description"
-                  name="description"
-                  defaultValue={task.description || ""}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   placeholder={t("descPlaceholder")}
-                  disabled={loading}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="priority">{t("priority")}</Label>
-                  <Select name="priority" defaultValue={task.priority}>
-                    <SelectTrigger>
-                      <SelectValue />
+                  <Select
+                    name="priority"
+                    value={priority}
+                    onValueChange={(value: Priority) => setPriority(value)}
+                  >
+                    <SelectTrigger id="priority">
+                      <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="LOW">{t("low")}</SelectItem>
-                      <SelectItem value="MEDIUM">{t("medium")}</SelectItem>
-                      <SelectItem value="HIGH">{t("high")}</SelectItem>
-                      <SelectItem value="URGENT">{t("urgent")}</SelectItem>
+                      <SelectItem value={Priority.LOW}>{t("low")}</SelectItem>
+                      <SelectItem value={Priority.MEDIUM}>{t("medium")}</SelectItem>
+                      <SelectItem value={Priority.HIGH}>{t("high")}</SelectItem>
+                      <SelectItem value={Priority.URGENT}>{t("urgent")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -187,8 +204,8 @@ export function TaskDetailsDialog({
                     id="dueDate"
                     name="dueDate"
                     type="date"
-                    defaultValue={task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ""}
-                    disabled={loading}
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
                   />
                 </div>
               </div>

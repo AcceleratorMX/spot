@@ -54,11 +54,11 @@ export function CreateTaskDialog({ columnId, boardId }: CreateTaskDialogProps) {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{t("addTask")}</DialogTitle>
+          <DialogDescription>{t("addTaskDesc")}</DialogDescription>
+        </DialogHeader>
         <form onSubmit={onSubmit}>
-          <DialogHeader>
-            <DialogTitle>{t("addTask")}</DialogTitle>
-            <DialogDescription>{t("addTaskDesc")}</DialogDescription>
-          </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="title">{t("taskTitle")}</Label>

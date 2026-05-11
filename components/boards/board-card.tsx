@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { Kanban, MoreVertical, Trash2 } from "lucide-react";
+import { Kanban, MoreVertical, Trash2, Settings } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { uk, enUS } from "date-fns/locale";
-import { deleteBoard } from "@/app/actions/boards";
+import { deleteBoard, type BoardSummaryWithRelations } from "@/app/actions/boards";
+import { BoardSettingsDialog } from "./board-settings-dialog";
 
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,18 +19,15 @@ import {
 import { Button } from "@/components/ui/button";
 
 type BoardCardProps = {
-  board: {
-    id: string;
-    title: string;
-    description: string | null;
-    updatedAt: Date;
-  };
+  board: BoardSummaryWithRelations;
 };
 
 export function BoardCard({ board }: BoardCardProps) {
   const locale = useLocale();
   const t = useTranslations("boards");
   const dateLocale = locale === "uk" ? uk : enUS;
+
+  const [showSettings, setShowSettings] = useState(false);
 
   const handleDelete = async () => {
     if (confirm(t("deleteConfirm"))) {
@@ -61,6 +60,10 @@ export function BoardCard({ board }: BoardCardProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setShowSettings(true)}>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>{t("boardSettings")}</span>
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={handleDelete}
                 className="text-destructive focus:bg-destructive/10 focus:text-destructive"
@@ -72,6 +75,12 @@ export function BoardCard({ board }: BoardCardProps) {
           </DropdownMenu>
         </div>
       </CardHeader>
+
+      <BoardSettingsDialog
+        board={board as any}
+        open={showSettings}
+        onOpenChange={setShowSettings}
+      />
       <CardFooter className="flex items-center gap-2 text-xs text-muted-foreground">
         <Kanban className="h-3 w-3" />
         <span>

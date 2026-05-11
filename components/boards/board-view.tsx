@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
 import { Priority } from "@prisma/client";
 import { updateColumnOrder } from "@/app/actions/columns";
@@ -63,6 +63,10 @@ type BoardViewProps = {
 
 export function BoardView({ board }: BoardViewProps) {
   const [columns, setColumns] = useState(board.columns);
+
+  useEffect(() => {
+    setColumns(board.columns);
+  }, [board.columns]);
 
   const onDragEnd = async (result: DropResult) => {
     const { destination, source, type } = result;

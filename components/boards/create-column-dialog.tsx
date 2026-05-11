@@ -49,11 +49,11 @@ export function CreateColumnDialog({ boardId }: CreateColumnDialogProps) {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{t("addColumn")}</DialogTitle>
+          <DialogDescription className="sr-only">{t("addColumnDesc")}</DialogDescription>
+        </DialogHeader>
         <form onSubmit={onSubmit}>
-          <DialogHeader>
-            <DialogTitle>{t("addColumn")}</DialogTitle>
-            <DialogDescription>{t("addColumnDesc")}</DialogDescription>
-          </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="title">{t("columnTitle")}</Label>

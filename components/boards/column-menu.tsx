@@ -15,6 +15,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -79,6 +80,9 @@ export function ColumnMenu({ columnId, columnTitle, boardId }: ColumnMenuProps) 
           <form onSubmit={handleRename}>
             <DialogHeader>
               <DialogTitle>Rename Column</DialogTitle>
+              <DialogDescription className="sr-only">
+                Change the title of this column.
+              </DialogDescription>
             </DialogHeader>
             <div className="py-4">
               <Label htmlFor="title">New Title</Label>
