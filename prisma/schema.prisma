@@ -2,8 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -15,6 +14,13 @@ datasource db {
 enum Role {
   USER
   ADMIN
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
 
 model User {
@@ -30,6 +36,10 @@ model User {
 
   accounts Account[]
   sessions Session[]
+  
+  boards           Board[]       @relation("CreatedBoards")
+  boardMemberships BoardMember[]
+  assignedTasks    TaskAssignee[]
 }
 
 model Account {
@@ -66,4 +76,64 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// ─── Kanban models ───────────────────────────────────────────
+
+model Board {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  userId      String
+  user        User     @relation("CreatedBoards", fields: [userId], references: [id], onDelete: Cascade)
+  members     BoardMember[]
+  columns     Column[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BoardMember {
+  id      String @id @default(cuid())
+  role    String @default("MEMBER") // OWNER, MEMBER, VIEWER
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, userId])
+}
+
+model Column {
+  id        String   @id @default(cuid())
+  title     String
+  order     Int      @default(0)
+  boardId   String
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Task {
+  id             String    @id @default(cuid())
+  title          String
+  description    String?   @db.Text
+  priority       Priority  @default(MEDIUM)
+  dueDate        DateTime?
+  order          Int       @default(0)
+  columnId       String
+  column         Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  participants   TaskAssignee[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model TaskAssignee {
+  id      String @id @default(cuid())
+  taskId  String
+  task    Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
 }

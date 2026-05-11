@@ -3,7 +3,8 @@ import { Settings } from "lucide-react";
 import { SettingsForm } from "@/components/settings-form";
 
 export default function SettingsPage() {
-  const t = useTranslations("nav");
+  const tNav = useTranslations("nav");
+  const tSettings = useTranslations("settings");
 
   return (
     <div className="container mx-auto max-w-4xl space-y-8 py-10">
@@ -13,9 +14,9 @@ export default function SettingsPage() {
         </div>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {t("settings")}
+            {tNav("settings")}
           </h1>
-          <p className="text-muted-foreground">{t("subtitle")}</p>
+          <p className="text-muted-foreground">{tSettings("subtitle")}</p>
         </div>
       </div>
 
