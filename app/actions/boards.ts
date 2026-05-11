@@ -21,11 +21,22 @@ const boardInclude = {
               include: {
                 user: true
               }
+            },
+            subtasks: {
+              orderBy: {
+                order: "asc"
+              }
+            },
+            labels: {
+              include: {
+                label: true
+              }
             }
           }
         }
       }
-    }
+    },
+    labels: true
   }
 } satisfies Prisma.BoardDefaultArgs;
 
@@ -126,6 +137,25 @@ export async function deleteBoard(id: string) {
   } catch (error) {
     console.error("Failed to delete board:", error);
     return { error: "Failed to delete board" };
+  }
+}
+
+export async function updateBoard(id: string, data: { title?: string; description?: string }) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  try {
+    await prisma.board.update({
+      where: { id },
+      data
+    });
+
+    revalidatePath(`/boards/${id}`);
+    revalidatePath("/boards");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update board:", error);
+    return { error: "Failed to update board" };
   }
 }
 

@@ -8,6 +8,7 @@ import { updateTaskOrder } from "@/app/actions/tasks";
 import { ColumnView } from "./column-view";
 import { CreateColumnDialog } from "./create-column-dialog";
 import { InviteMemberDialog } from "./invite-member-dialog";
+import { BoardSettingsDialog } from "./board-settings-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type Task = {
@@ -25,6 +26,8 @@ type Task = {
       image: string | null;
     };
   }[];
+  subtasks: { id: string; title: string; isDone: boolean }[];
+  labels: { label: { id: string; name: string; color: string } }[];
   order: number;
   columnId: string;
 };
@@ -51,6 +54,7 @@ type Board = {
   description: string | null;
   columns: Column[];
   members: Member[];
+  labels: { id: string; name: string; color: string }[];
 };
 
 type BoardViewProps = {
@@ -146,19 +150,32 @@ export function BoardView({ board }: BoardViewProps) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between px-4 pb-2">
-        <div className="flex items-center gap-4">
-          <div className="flex -space-x-2 overflow-hidden">
-            {board.members.map((member) => (
-              <Avatar key={member.user.id} className="inline-block h-8 w-8 rounded-full ring-2 ring-background">
-                <AvatarImage src={member.user.image || ""} />
-                <AvatarFallback className="text-xs">
-                  {member.user.name?.[0] || member.user.email[0]}
-                </AvatarFallback>
-              </Avatar>
-            ))}
+      <div className="flex flex-col px-6 py-4 gap-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold tracking-tight">{board.title}</h1>
+              {board.description && (
+                <p className="text-sm text-muted-foreground">
+                  {board.description}
+                </p>
+              )}
+            </div>
+            <BoardSettingsDialog board={board} />
           </div>
-          <InviteMemberDialog boardId={board.id} />
+          <div className="flex items-center gap-4">
+            <div className="flex -space-x-2 overflow-hidden">
+              {board.members.map((member) => (
+                <Avatar key={member.user.id} className="inline-block h-8 w-8 rounded-full ring-2 ring-background">
+                  <AvatarImage src={member.user.image || ""} />
+                  <AvatarFallback className="text-xs">
+                    {member.user.name?.[0] || member.user.email[0]}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
+            </div>
+            <InviteMemberDialog boardId={board.id} />
+          </div>
         </div>
       </div>
 
@@ -177,6 +194,7 @@ export function BoardView({ board }: BoardViewProps) {
                   index={index} 
                   boardId={board.id}
                   members={board.members}
+                  allLabels={board.labels}
                 />
               ))}
               {provided.placeholder}

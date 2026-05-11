@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { updateTask, deleteTask } from "@/app/actions/tasks";
+import { updateTask, deleteTask, createSubtask, toggleSubtask, deleteSubtask } from "@/app/actions/tasks";
+import { addTaskLabel, removeTaskLabel } from "@/app/actions/labels";
 import { Priority } from "@prisma/client";
+import { Plus, X } from "lucide-react";
 
 import {
   Dialog,
@@ -27,6 +29,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Badge } from "@/components/ui/badge";
 
 type Task = {
   id: string;
@@ -35,6 +38,8 @@ type Task = {
   priority: Priority;
   dueDate: Date | null;
   participants: { userId: string }[];
+  subtasks: { id: string; title: string; isDone: boolean }[];
+  labels: { label: { id: string; name: string; color: string } }[];
 };
 
 type Member = {
@@ -51,6 +56,7 @@ type TaskDetailsDialogProps = {
   members: Member[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  allLabels: { id: string; name: string; color: string }[];
 };
 
 export function TaskDetailsDialog({
@@ -59,6 +65,7 @@ export function TaskDetailsDialog({
   members,
   open,
   onOpenChange,
+  allLabels,
 }: TaskDetailsDialogProps) {
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -103,6 +110,30 @@ export function TaskDetailsDialog({
         ? prev.filter((id) => id !== userId)
         : [...prev, userId]
     );
+  };
+
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const handleAddSubtask = async () => {
+    if (!newSubtaskTitle.trim()) return;
+    await createSubtask(task.id, newSubtaskTitle, boardId);
+    setNewSubtaskTitle("");
+  };
+
+  const handleToggleSubtask = async (id: string, isDone: boolean) => {
+    await toggleSubtask(id, isDone, boardId);
+  };
+
+  const handleDeleteSubtask = async (id: string) => {
+    await deleteSubtask(id, boardId);
+  };
+
+  const handleToggleLabel = async (labelId: string) => {
+    const isAssigned = task.labels.some((l) => l.label.id === labelId);
+    if (isAssigned) {
+      await removeTaskLabel(task.id, labelId, boardId);
+    } else {
+      await addTaskLabel(task.id, labelId, boardId);
+    }
   };
 
   return (
@@ -179,6 +210,84 @@ export function TaskDetailsDialog({
                       </Label>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>{t("labels") || "Labels"}</Label>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {allLabels.map((label) => {
+                    const isSelected = task.labels.some((l) => l.label.id === label.id);
+                    return (
+                      <Badge
+                        key={label.id}
+                        variant={isSelected ? "default" : "outline"}
+                        className="cursor-pointer"
+                        style={{
+                          backgroundColor: isSelected ? label.color : "transparent",
+                          borderColor: label.color,
+                          color: isSelected ? "white" : "inherit",
+                        }}
+                        onClick={() => handleToggleLabel(label.id)}
+                      >
+                        {label.name}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>{t("subtasks") || "Subtasks"}</Label>
+                <div className="space-y-2 mt-1">
+                  {task.subtasks.map((subtask) => (
+                    <div key={subtask.id} className="flex items-center justify-between group">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`sub-${subtask.id}`}
+                          checked={subtask.isDone}
+                          onCheckedChange={(checked) => handleToggleSubtask(subtask.id, !!checked)}
+                        />
+                        <Label
+                          htmlFor={`sub-${subtask.id}`}
+                          className={`text-sm font-normal cursor-pointer ${subtask.isDone ? "line-through text-muted-foreground" : ""}`}
+                        >
+                          {subtask.title}
+                        </Label>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleDeleteSubtask(subtask.id)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  <div className="flex items-center gap-2 mt-2">
+                    <Input
+                      placeholder={t("addSubtask") || "Add subtask..."}
+                      value={newSubtaskTitle}
+                      onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddSubtask();
+                        }
+                      }}
+                      className="h-8"
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={handleAddSubtask}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

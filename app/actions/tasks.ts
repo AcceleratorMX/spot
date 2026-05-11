@@ -121,3 +121,55 @@ export async function updateTaskOrder(
     return { error: "Failed to update tasks order" };
   }
 }
+
+export async function createSubtask(taskId: string, title: string, boardId: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  try {
+    await prisma.subtask.create({
+      data: {
+        title,
+        taskId,
+      }
+    });
+
+    revalidatePath(`/boards/${boardId}`);
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to create subtask" };
+  }
+}
+
+export async function toggleSubtask(id: string, isDone: boolean, boardId: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  try {
+    await prisma.subtask.update({
+      where: { id },
+      data: { isDone }
+    });
+
+    revalidatePath(`/boards/${boardId}`);
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to toggle subtask" };
+  }
+}
+
+export async function deleteSubtask(id: string, boardId: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  try {
+    await prisma.subtask.delete({
+      where: { id }
+    });
+
+    revalidatePath(`/boards/${boardId}`);
+    return { success: true };
+  } catch (error) {
+    return { error: "Failed to delete subtask" };
+  }
+}

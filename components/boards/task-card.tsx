@@ -24,6 +24,8 @@ type Task = {
       image: string | null;
     };
   }[];
+  subtasks: { id: string; title: string; isDone: boolean }[];
+  labels: { label: { id: string; name: string; color: string } }[];
   order: number;
   columnId: string;
 };
@@ -42,9 +44,10 @@ type TaskCardProps = {
   index: number;
   boardId: string;
   members: Member[];
+  allLabels: { id: string; name: string; color: string }[];
 };
 
-export function TaskCard({ task, index, boardId, members }: TaskCardProps) {
+export function TaskCard({ task, index, boardId, members, allLabels }: TaskCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const t = useTranslations("boards");
 
@@ -70,6 +73,16 @@ export function TaskCard({ task, index, boardId, members }: TaskCardProps) {
           >
             <Card className="bg-background border-muted-foreground/20 hover:border-primary/50 transition-colors cursor-pointer">
               <CardContent className="p-3 space-y-3">
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {task.labels.map((l) => (
+                    <div
+                      key={l.label.id}
+                      className="h-1.5 w-6 rounded-full"
+                      style={{ backgroundColor: l.label.color }}
+                      title={l.label.name}
+                    />
+                  ))}
+                </div>
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-medium leading-tight">{task.title}</p>
                   <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 h-4 uppercase ${priorityColors[task.priority]}`}>
@@ -77,7 +90,7 @@ export function TaskCard({ task, index, boardId, members }: TaskCardProps) {
                   </Badge>
                 </div>
                 
-                {(task.description || task.participants.length > 0 || task.dueDate) && (
+                {(task.description || task.participants.length > 0 || task.dueDate || task.subtasks.length > 0) && (
                   <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center gap-2">
                       <div className="flex -space-x-2 overflow-hidden">
@@ -90,6 +103,13 @@ export function TaskCard({ task, index, boardId, members }: TaskCardProps) {
                           </Avatar>
                         ))}
                       </div>
+                      {task.subtasks.length > 0 && (
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          <span className={task.subtasks.every(s => s.isDone) ? "text-green-500 font-bold" : ""}>
+                            {task.subtasks.filter(s => s.isDone).length}/{task.subtasks.length}
+                          </span>
+                        </div>
+                      )}
                       {task.dueDate && (
                         <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded ml-1">
                           {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
@@ -110,6 +130,7 @@ export function TaskCard({ task, index, boardId, members }: TaskCardProps) {
         members={members}
         open={showDetails}
         onOpenChange={setShowDetails}
+        allLabels={allLabels}
       />
     </>
   );

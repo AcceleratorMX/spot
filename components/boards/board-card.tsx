@@ -20,6 +20,7 @@ type BoardCardProps = {
   board: {
     id: string;
     title: string;
+    description: string | null;
     updatedAt: Date;
   };
 };
@@ -42,9 +43,16 @@ export function BoardCard({ board }: BoardCardProps) {
         className="absolute inset-0 z-0"
       />
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="line-clamp-1 text-lg font-bold">
-          {board.title}
-        </CardTitle>
+        <div className="space-y-1">
+          <CardTitle className="line-clamp-1 text-lg font-bold">
+            {board.title}
+          </CardTitle>
+          {board.description && (
+            <p className="line-clamp-2 text-xs text-muted-foreground">
+              {board.description}
+            </p>
+          )}
+        </div>
         <div className="z-10">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
