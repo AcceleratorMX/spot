@@ -1,21 +1,25 @@
 import { useTranslations } from "next-intl";
 import { Settings } from "lucide-react";
+import { SettingsForm } from "@/components/settings-form";
 
 export default function SettingsPage() {
   const t = useTranslations("nav");
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto max-w-4xl space-y-8 py-10">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <Settings className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-3xl font-bold tracking-tight">
             {t("settings")}
           </h1>
+          <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
       </div>
+
+      <SettingsForm />
     </div>
   );
 }

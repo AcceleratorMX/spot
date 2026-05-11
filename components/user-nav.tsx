@@ -1,9 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { LogOut, User } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { Link, useRouter } from "@/i18n/navigation";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -67,9 +67,11 @@ export function UserNav({ user }: UserNavProps) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem id="nav-profile">
-          <User className="mr-2 h-4 w-4" />
-          <span>{t("profile")}</span>
+        <DropdownMenuItem asChild id="nav-profile">
+          <Link href="/profile" className="flex w-full items-center">
+            <User className="mr-2 h-4 w-4" />
+            <span>{t("profile")}</span>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} id="nav-sign-out">

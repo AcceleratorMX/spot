@@ -1,15 +1,15 @@
 "use client";
 
-import * as React from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 
-type Theme = "light" | "dark" | "system";
+export type Theme = "light" | "dark" | "system";
 
 type ThemeProviderContextType = {
   theme: Theme;
   setTheme: (theme: Theme) => void;
 };
 
-const ThemeProviderContext = React.createContext<ThemeProviderContextType>({
+const ThemeProviderContext = createContext<ThemeProviderContextType>({
   theme: "system",
   setTheme: () => {},
 });
@@ -28,8 +28,8 @@ function applyTheme(theme: Theme) {
   document.documentElement.classList.toggle("dark", resolved === "dark");
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = React.useState<Theme>(() => {
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window === "undefined") return "system";
     const stored = localStorage.getItem(STORAGE_KEY);
     const validThemes: Theme[] = ["light", "dark", "system"];
@@ -39,11 +39,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   });
 
   // Apply theme class to document on mount and theme change
-  React.useEffect(() => {
+  useEffect(() => {
     applyTheme(theme);
   }, [theme]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const mql = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = () => {
       if (theme === "system") applyTheme("system");
@@ -52,7 +52,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => mql.removeEventListener("change", handler);
   }, [theme]);
 
-  const setTheme = React.useCallback((newTheme: Theme) => {
+  const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
     localStorage.setItem(STORAGE_KEY, newTheme);
     applyTheme(newTheme);
@@ -66,5 +66,5 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useTheme() {
-  return React.useContext(ThemeProviderContext);
+  return useContext(ThemeProviderContext);
 }

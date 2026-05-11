@@ -40,5 +40,24 @@
     "subtitle": "Overview of your projects and boards",
     "noBoards": "No boards yet",
     "createFirst": "Create your first board to get started"
+  },
+  "profile": {
+    "personalInfo": "Personal Information",
+    "personalInfoDesc": "Your personal information",
+    "security": "Security",
+    "securityDesc": "Access management",
+    "name": "Name",
+    "id": "ID",
+    "role": "Role",
+    "twoFactor": "Two-factor authentication",
+    "disabled": "Disabled"
+  },
+  "settings": {
+    "appearance": "Appearance",
+    "appearanceDesc": "Customize the application theme",
+    "languageRegion": "Language & Region",
+    "languageRegionDesc": "Choose the interface language",
+    "selectLanguage": "Select language",
+    "subtitle": "Manage your settings and preferences"
   }
 }

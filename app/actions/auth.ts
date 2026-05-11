@@ -18,7 +18,6 @@ export async function signUp(
   formData: FormData,
 ): Promise<AuthActionResult> {
   const rawData = {
-    name: formData.get("name") as string,
     email: formData.get("email") as string,
     password: formData.get("password") as string,
   };
@@ -32,7 +31,7 @@ export async function signUp(
     };
   }
 
-  const { name, email, password } = validated.data;
+  const { email, password } = validated.data;
 
   const existingUser = await prisma.user.findUnique({
     where: { email },
@@ -46,6 +45,7 @@ export async function signUp(
   }
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+  const name = email.split("@")[0] || "User";
 
   await prisma.user.create({
     data: {
