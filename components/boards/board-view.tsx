@@ -15,7 +15,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -79,7 +78,7 @@ type BoardViewProps = {
 export function BoardView({ board }: BoardViewProps) {
   const { data: session } = useSession();
   const isOwner = session?.user?.id === board.userId;
-  
+
   const [columns, setColumns] = useState(board.columns);
   const [prevColumns, setPrevColumns] = useState(board.columns);
   const router = useRouter();
@@ -190,8 +189,8 @@ export function BoardView({ board }: BoardViewProps) {
 
   const allMembers = Array.from(
     new Map(
-      [{ user: board.user }, ...board.members].map((m) => [m.user.id, m])
-    ).values()
+      [{ user: board.user }, ...board.members].map((m) => [m.user.id, m]),
+    ).values(),
   );
 
   return (
@@ -268,4 +267,3 @@ export function BoardView({ board }: BoardViewProps) {
     </div>
   );
 }
-

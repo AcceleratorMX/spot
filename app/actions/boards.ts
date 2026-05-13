@@ -7,54 +7,50 @@ import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 
 const boardInclude = {
-  include: {
-    user: true,
-    members: {
-      include: {
-        user: true
-      }
-    },
-    columns: {
-      include: {
-        tasks: {
-          include: {
-            participants: {
-              include: {
-                user: true
-              }
-            },
-            subtasks: {
-              orderBy: {
-                order: "asc"
-              }
-            },
-            labels: {
-              include: {
-                label: true
-              }
+  user: true,
+  members: {
+    include: {
+      user: true
+    }
+  },
+  columns: {
+    include: {
+      tasks: {
+        include: {
+          participants: {
+            include: {
+              user: true
+            }
+          },
+          subtasks: {
+            orderBy: {
+              order: "asc"
+            }
+          },
+          labels: {
+            include: {
+              label: true
             }
           }
         }
       }
-    },
-    labels: true
-  }
-} satisfies Prisma.BoardDefaultArgs;
+    }
+  },
+  labels: true
+} satisfies Prisma.BoardInclude;
 
 const boardSummaryInclude = {
-  include: {
-    user: true,
-    members: {
-      include: {
-        user: true
-      }
-    },
-    labels: true
-  }
-} satisfies Prisma.BoardDefaultArgs;
+  user: true,
+  members: {
+    include: {
+      user: true
+    }
+  },
+  labels: true
+} satisfies Prisma.BoardInclude;
 
-export type BoardWithRelations = Prisma.BoardGetPayload<typeof boardInclude>;
-export type BoardSummaryWithRelations = Prisma.BoardGetPayload<typeof boardSummaryInclude>;
+export type BoardWithRelations = Prisma.BoardGetPayload<{ include: typeof boardInclude }>;
+export type BoardSummaryWithRelations = Prisma.BoardGetPayload<{ include: typeof boardSummaryInclude }>;
 
 export async function getBoards() {
   const session = await auth();
@@ -62,19 +58,79 @@ export async function getBoards() {
     throw new Error("Unauthorized");
   }
 
-  // Get boards where user is either the creator or a member
-  return await prisma.board.findMany({
-    where: {
-      OR: [
-        { userId: session.user.id },
-        { members: { some: { userId: session.user.id } } }
-      ]
+  // Get memberships with sorting by favorite and order
+  const memberships = await prisma.boardMember.findMany({
+    where: { userId: session.user.id },
+    include: {
+      board: {
+        include: boardSummaryInclude
+      }
     },
-    orderBy: {
-      updatedAt: "desc",
-    },
-    ...boardSummaryInclude
+    orderBy: [
+      { isFavorite: "desc" },
+      { order: "asc" },
+      { id: "asc" }
+    ]
   });
+
+  // Map to a structure that's easy to use, attaching membership info to the board
+  return memberships.map(m => ({
+    ...m.board,
+    isFavorite: m.isFavorite,
+    order: m.order
+  }));
+}
+
+export async function toggleFavorite(boardId: string, isFavorite: boolean) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  try {
+    await prisma.boardMember.update({
+      where: {
+        boardId_userId: {
+          boardId,
+          userId: session.user.id
+        }
+      },
+      data: { isFavorite }
+    });
+    revalidatePath("/boards");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to toggle favorite:", error);
+    return { error: "Failed to update favorite status" };
+  }
+}
+
+export async function reorderBoards(boardIds: string[]) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  try {
+    const userId = session.user.id;
+    
+    // Perform updates in a transaction
+    await prisma.$transaction(
+      boardIds.map((id, index) => 
+        prisma.boardMember.update({
+          where: {
+            boardId_userId: {
+              boardId: id,
+              userId
+            }
+          },
+          data: { order: index }
+        })
+      )
+    );
+
+    revalidatePath("/boards");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to reorder boards:", error);
+    return { error: "Failed to reorder boards" };
+  }
 }
 
 export async function createBoard(formData: FormData) {
@@ -176,7 +232,7 @@ export async function getBoardById(id: string): Promise<BoardWithRelations | nul
         { members: { some: { userId: session.user.id } } }
       ]
     },
-    ...boardInclude
+    include: boardInclude
   });
 
   return board as BoardWithRelations | null;

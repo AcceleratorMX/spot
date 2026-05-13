@@ -101,6 +101,8 @@ model BoardMember {
   board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
   userId  String
   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isFavorite Boolean @default(false)
+  order      Int     @default(0)
 
   @@unique([boardId, userId])
 }

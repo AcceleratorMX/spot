@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Kanban } from "lucide-react";
 import { getBoards } from "@/app/actions/boards";
 import { CreateBoardDialog } from "@/components/boards/create-board-dialog";
-import { BoardCard } from "@/components/boards/board-card";
+import { BoardList } from "@/components/boards/board-list";
 
 export default async function BoardsPage() {
   const t = await getTranslations("boards");
@@ -40,11 +40,7 @@ export default async function BoardsPage() {
             </div>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {boards.map((board) => (
-              <BoardCard key={board.id} board={board} />
-            ))}
-          </div>
+          <BoardList initialBoards={boards} />
         )}
       </div>
     </div>

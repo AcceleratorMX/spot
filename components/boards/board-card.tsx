@@ -3,11 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { Kanban, MoreVertical, Trash2, Settings } from "lucide-react";
+import { Kanban, MoreVertical, Trash2, Settings, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { uk, enUS } from "date-fns/locale";
 import {
   deleteBoard,
+  toggleFavorite,
   type BoardSummaryWithRelations,
 } from "@/app/actions/boards";
 import { BoardSettingsDialog } from "./board-settings-dialog";
@@ -19,6 +20,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -30,7 +32,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 type BoardCardProps = {
-  board: BoardSummaryWithRelations;
+  board: BoardSummaryWithRelations & { isFavorite?: boolean; order?: number };
 };
 
 export function BoardCard({ board }: BoardCardProps) {
@@ -40,9 +42,20 @@ export function BoardCard({ board }: BoardCardProps) {
 
   const [showSettings, setShowSettings] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [loadingFavorite, setLoadingFavorite] = useState(false);
   const { data: session } = useSession();
   
   const isOwner = session?.user?.id === board.userId;
+
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (loadingFavorite) return;
+
+    setLoadingFavorite(true);
+    await toggleFavorite(board.id, !board.isFavorite);
+    setLoadingFavorite(false);
+  };
 
   // Combine owner and members, deduplicate by user ID
   const allParticipants = [
@@ -73,6 +86,18 @@ export function BoardCard({ board }: BoardCardProps) {
           )}
         </div>
         <div className="relative z-10 flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-8 w-8 transition-colors",
+              board.isFavorite ? "text-yellow-500 hover:text-yellow-600" : "text-muted-foreground hover:text-yellow-500"
+            )}
+            onClick={handleFavoriteClick}
+            disabled={loadingFavorite}
+          >
+            <Star className={cn("h-4 w-4", board.isFavorite && "fill-current")} />
+          </Button>
           {isOwner && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
