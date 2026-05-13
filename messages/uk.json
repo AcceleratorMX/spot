@@ -113,13 +113,11 @@
     "subtask": "підзавдання",
     "label": "мітку",
     "title": "Назва",
-    "description": "Опис",
-    "priority": "Пріоритет",
-    "dueDate": "Термін",
     "labelAdded": "Мітку додано",
     "labelRemoved": "Мітку видалено",
     "assigneesUpdated": "Виконавців оновлено",
     "subtaskAdded": "Підзавдання додано",
-    "subtaskRemoved": "Підзавдання видалено"
+    "subtaskRemoved": "Підзавдання видалено",
+    "subtaskToggled": "Статус підзавдання змінено"
   }
 }

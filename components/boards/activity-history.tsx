@@ -137,14 +137,13 @@ export function ActivityHistory({ entityId, entityType, refreshKey }: ActivityHi
           </div>
         );
 
-      if (key === "subtask") {
-        const isAdded = newVal !== undefined;
+      if (key === "subtaskAdded" || key === "subtaskRemoved" || key === "subtaskToggled") {
         return (
           <div
             key={key}
             className="text-[11px] text-muted-foreground mt-0.5 pl-2 border-l-2 border-primary/20"
           >
-            • {isAdded ? t("subtaskAdded") || "Subtask added" : t("subtaskRemoved") || "Subtask removed"}: {String(newVal || oldVal)}
+            • {t(key) || key}: {String(newVal || oldVal)}
           </div>
         );
       }

@@ -197,7 +197,7 @@ export async function createSubtask(taskId: string, title: string, boardId: stri
   if (!session?.user?.id) return { error: "Unauthorized" };
 
   try {
-    const subtask = await prisma.subtask.create({
+    await prisma.subtask.create({
       data: {
         title,
         taskId,
@@ -208,7 +208,7 @@ export async function createSubtask(taskId: string, title: string, boardId: stri
       entityId: taskId,
       entityType: EntityType.TASK,
       action: AuditAction.UPDATE,
-      newData: { subtask: title }
+      newData: { subtaskAdded: title }
     });
 
     revalidatePath(`/boards/${boardId}`);
@@ -233,7 +233,7 @@ export async function toggleSubtask(id: string, isDone: boolean, boardId: string
       entityId: subtask.taskId,
       entityType: EntityType.TASK,
       action: AuditAction.UPDATE,
-      newData: { subtask: `${subtask.title} (${isDone ? "done" : "todo"})` }
+      newData: { subtaskToggled: `${subtask.title} (${isDone ? "done" : "todo"})` }
     });
 
     await touchBoard(boardId);

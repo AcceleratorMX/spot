@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 
 // Helper to register and sign in a test user
 async function registerAndSignIn(page: Page, locale = "en") {
-  const unique = Date.now();
+  const unique = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
   const email = `e2e-ui-${unique}@test.com`;
   const password = "TestPass123";
 

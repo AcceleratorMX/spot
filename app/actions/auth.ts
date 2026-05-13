@@ -47,15 +47,25 @@ export async function signUp(
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-  await prisma.user.create({
-    data: {
-      name,
-      email,
-      passwordHash,
-    },
-  });
-
-  return { success: true };
+  try {
+    await prisma.user.create({
+      data: {
+        name,
+        email,
+        passwordHash,
+      },
+    });
+    return { success: true };
+  } catch (error) {
+    // Handle potential race condition where user was created between the check and create
+    if (error instanceof Error && error.message.includes("P2002")) {
+      return {
+        success: false,
+        error: "userExists",
+      };
+    }
+    throw error;
+  }
 }
 
 export async function signIn(

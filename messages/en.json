@@ -113,13 +113,11 @@
     "subtask": "subtask",
     "label": "label",
     "title": "Title",
-    "description": "Description",
-    "priority": "Priority",
-    "dueDate": "Due date",
     "labelAdded": "Label added",
     "labelRemoved": "Label removed",
     "assigneesUpdated": "Assignees updated",
     "subtaskAdded": "Subtask added",
-    "subtaskRemoved": "Subtask removed"
+    "subtaskRemoved": "Subtask removed",
+    "subtaskToggled": "Subtask toggled"
   }
 }
