@@ -6,7 +6,10 @@ import { useLocale, useTranslations } from "next-intl";
 import { Kanban, MoreVertical, Trash2, Settings } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { uk, enUS } from "date-fns/locale";
-import { deleteBoard, type BoardSummaryWithRelations } from "@/app/actions/boards";
+import {
+  deleteBoard,
+  type BoardSummaryWithRelations,
+} from "@/app/actions/boards";
 import { BoardSettingsDialog } from "./board-settings-dialog";
 
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,7 +80,7 @@ export function BoardCard({ board }: BoardCardProps) {
       </CardHeader>
 
       <BoardSettingsDialog
-        board={board as any}
+        board={board}
         open={showSettings}
         onOpenChange={setShowSettings}
       />

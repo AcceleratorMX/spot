@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { updateTask, deleteTask, createSubtask, toggleSubtask, deleteSubtask } from "@/app/actions/tasks";
 import { addTaskLabel, removeTaskLabel } from "@/app/actions/labels";
@@ -79,13 +79,16 @@ export function TaskDetailsDialog({
   const [dueDate, setDueDate] = useState(task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "");
   const router = useRouter();
 
-  useEffect(() => {
+  const [prevTask, setPrevTask] = useState(task);
+
+  if (task !== prevTask) {
     setSelectedAssignees(task.participants.map((p) => p.userId));
     setTitle(task.title);
     setDescription(task.description || "");
     setPriority(task.priority);
     setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "");
-  }, [task]);
+    setPrevTask(task);
+  }
   const t = useTranslations("boards");
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {

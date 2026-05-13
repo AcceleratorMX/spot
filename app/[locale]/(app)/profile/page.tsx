@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
-import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { User, Mail, Shield, Calendar } from "lucide-react";
+import { User, Shield } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";

@@ -26,7 +26,7 @@ export async function createColumn(boardId: string, title: string) {
 
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to create column" };
   }
 }
@@ -46,7 +46,7 @@ export async function updateColumnOrder(boardId: string, columnIds: string[]) {
     await prisma.$transaction(updates);
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to update columns order" };
   }
 }
@@ -63,7 +63,7 @@ export async function renameColumn(id: string, title: string, boardId: string) {
 
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to rename column" };
   }
 }

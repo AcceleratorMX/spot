@@ -19,7 +19,7 @@ export async function createLabel(boardId: string, name: string, color: string) 
 
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to create label" };
   }
 }
@@ -35,7 +35,7 @@ export async function deleteLabel(id: string, boardId: string) {
 
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to delete label" };
   }
 }
@@ -54,7 +54,7 @@ export async function addTaskLabel(taskId: string, labelId: string, boardId: str
 
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to add label to task" };
   }
 }
@@ -75,7 +75,7 @@ export async function removeTaskLabel(taskId: string, labelId: string, boardId: 
 
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to remove label from task" };
   }
 }

@@ -27,7 +27,7 @@ export async function createTask(columnId: string, title: string, boardId: strin
 
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to create task" };
   }
 }
@@ -94,7 +94,7 @@ export async function deleteTask(id: string, boardId: string) {
 
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to delete task" };
   }
 }
@@ -117,7 +117,7 @@ export async function updateTaskOrder(
     await prisma.$transaction(prismaUpdates);
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to update tasks order" };
   }
 }
@@ -136,7 +136,7 @@ export async function createSubtask(taskId: string, title: string, boardId: stri
 
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to create subtask" };
   }
 }
@@ -153,7 +153,7 @@ export async function toggleSubtask(id: string, isDone: boolean, boardId: string
 
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to toggle subtask" };
   }
 }
@@ -169,7 +169,7 @@ export async function deleteSubtask(id: string, boardId: string) {
 
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to delete subtask" };
   }
 }
