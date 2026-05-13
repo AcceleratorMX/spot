@@ -35,9 +35,17 @@ test.describe("Task Dependencies and Graph", () => {
     test.setTimeout(60000); // This test performs many steps — increase timeout to 60s
     // 1. Setup: Board, Column, and Two Tasks
     await page.locator("#sidebar-nav-boards").click();
+    await page.waitForURL("**/boards");
+    
     await page.locator("#create-board-trigger").first().click();
     await page.locator("#title").fill("Dependency Test Board");
+    // Give a small delay for the dialog to settle on CI
+    await page.waitForTimeout(500);
     await page.locator("#create-board-submit").click();
+    
+    // Wait for dialog to close
+    await expect(page.locator("#create-board-submit")).toBeHidden();
+
     await page.getByText("Dependency Test Board").first().click();
     await page.waitForURL(/\/boards\/[a-z0-9]+/);
     await page.waitForLoadState("networkidle");
@@ -45,17 +53,23 @@ test.describe("Task Dependencies and Graph", () => {
     // Add Column
     await page.getByText("Add Column").first().click();
     await page.locator("#title").fill("To Do");
+    await page.waitForTimeout(500);
     await page.locator("#create-column-submit").click();
+    await expect(page.locator("#create-column-submit")).toBeHidden();
 
     // Add Task 1 (Prerequisite)
     await page.getByText("Add Task").first().click();
     await page.locator("#title").fill("Prerequisite Task");
+    await page.waitForTimeout(500);
     await page.locator("#create-task-submit").click();
+    await expect(page.locator("#create-task-submit")).toBeHidden();
     
     // Add Task 2 (Dependent)
     await page.getByText("Add Task").first().click();
     await page.locator("#title").fill("Dependent Task");
+    await page.waitForTimeout(500);
     await page.locator("#create-task-submit").click();
+    await expect(page.locator("#create-task-submit")).toBeHidden();
 
     // Reload to ensure all tasks are in the server-rendered data (allTasks prop)
     await page.reload();
