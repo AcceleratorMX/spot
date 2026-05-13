@@ -122,6 +122,12 @@
     "dependencies": "Залежності",
     "addDependency": "Додати залежність...",
     "noDependencies": "Немає залежностей",
-    "dependency": "залежність"
+    "dependency": "залежність",
+    "interactiveGraph": "Інтерактивний граф",
+    "magicLayout": "Магічна розстановка",
+    "dragInstructions": "Перетягуйте ноди для зміни вигляду",
+    "connectInstructions": "З'єднуйте точки для створення зв'язків",
+    "clickInstructions": "Натисніть на завдання для деталей",
+    "autoArrange": "Авто-розстановка завдань"
   }
 }

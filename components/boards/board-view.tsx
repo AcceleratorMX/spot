@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
 import { Priority } from "@prisma/client";
@@ -87,11 +87,20 @@ export function BoardView({ board }: BoardViewProps) {
   const { data: session } = useSession();
   const isOwner = session?.user?.id === board.userId;
 
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const view = (searchParams.get("view") as "kanban" | "graph") || "kanban";
+
   const [columns, setColumns] = useState(board.columns);
   const [prevColumns, setPrevColumns] = useState(board.columns);
-  const [view, setView] = useState<"kanban" | "graph">("kanban");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const router = useRouter();
+
+  const setView = (newView: "kanban" | "graph") => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("view", newView);
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {

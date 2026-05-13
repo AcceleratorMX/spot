@@ -122,6 +122,12 @@
     "dependencies": "Dependencies",
     "addDependency": "Add dependency...",
     "noDependencies": "No dependencies",
-    "dependency": "dependency"
+    "dependency": "dependency",
+    "interactiveGraph": "Interactive Graph",
+    "magicLayout": "Magic Layout",
+    "dragInstructions": "Drag nodes to rearrange layout",
+    "connectInstructions": "Connect handles to link tasks",
+    "clickInstructions": "Click task to open details",
+    "autoArrange": "Auto-arrange tasks"
   }
 }

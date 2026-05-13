@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import dagre from 'dagre';
 import { addTaskDependency, updateTaskPosition } from "@/app/actions/tasks";
 import { useTheme } from 'next-themes';
+import { useTranslations } from 'next-intl';
 
 // --- Types ---
 type NodeData = {
@@ -146,6 +147,7 @@ const nodeTypes = {
 
 export function DependencyGraph({ board, onTaskClick }: DependencyGraphProps) {
   const { theme } = useTheme();
+  const t = useTranslations("boards");
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<NodeData>>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [isInitialLayoutDone, setIsInitialLayoutDone] = React.useState(false);
@@ -281,19 +283,19 @@ export function DependencyGraph({ board, onTaskClick }: DependencyGraphProps) {
         <Controls />
         <Panel position="top-left" className="bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-sm max-w-[250px]">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs font-bold uppercase text-primary">Interactive Graph</h3>
+            <h3 className="text-xs font-bold uppercase text-primary">{t("interactiveGraph")}</h3>
             <button 
               onClick={() => applyLayout(true)}
               className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded hover:opacity-80 transition-opacity"
-              title="Auto-arrange tasks"
+              title={t("autoArrange")}
             >
-              Magic Layout
+              {t("magicLayout")}
             </button>
           </div>
           <ul className="text-[10px] space-y-1 text-muted-foreground">
-            <li>• <b>Positions are saved</b> to the database automatically</li>
-            <li>• <b>Connect handles</b> to link tasks</li>
-            <li>• <b>Click task</b> to open details</li>
+            <li>• {t("dragInstructions")}</li>
+            <li>• {t("connectInstructions")}</li>
+            <li>• {t("clickInstructions")}</li>
           </ul>
         </Panel>
       </ReactFlow>
