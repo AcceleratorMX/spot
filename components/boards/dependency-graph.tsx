@@ -24,9 +24,10 @@ import { Badge } from "@/components/ui/badge";
 import { Priority } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import dagre from 'dagre';
-import { addTaskDependency, updateTaskPosition } from "@/app/actions/tasks";
+import { addTaskDependency, removeTaskDependency, updateTaskPosition } from "@/app/actions/tasks";
 import { useTheme } from 'next-themes';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 
 // --- Types ---
 type NodeData = {
@@ -151,6 +152,7 @@ const nodeTypes = {
 function DependencyGraphContent({ board, onTaskClick }: DependencyGraphProps) {
   const { theme } = useTheme();
   const t = useTranslations("boards");
+  const router = useRouter();
   const { fitView } = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<NodeData>>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -232,7 +234,9 @@ function DependencyGraphContent({ board, onTaskClick }: DependencyGraphProps) {
   useEffect(() => {
     if (!isInitialLayoutDone) return;
 
-    const allTasks = board.columns.flatMap(c => c.tasks);
+    const allTasks = board.columns.flatMap(col => 
+      col.tasks.map(t => ({ ...t, columnTitle: col.title }))
+    );
     
     // Update edges if dependencies changed
     const newEdges: Edge[] = allTasks.flatMap((task) => 
@@ -246,20 +250,41 @@ function DependencyGraphContent({ board, onTaskClick }: DependencyGraphProps) {
     );
     setEdges(newEdges);
 
-    // Update node data (like titles/priority) but keep positions
-    setNodes((nds) => nds.map(node => {
-      const task = allTasks.find(t => t.id === node.id);
-      if (!task) return node;
-      return {
-        ...node,
-        data: {
-          ...node.data,
-          title: task.title,
-          priority: task.priority,
-        }
-      };
-    }));
-  }, [board, isInitialLayoutDone, setNodes, setEdges]);
+    // Update node data and handle new nodes
+    setNodes((nds) => {
+      const updatedNodes = nds.map(node => {
+        const task = allTasks.find(t => t.id === node.id);
+        if (!task) return node;
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            title: task.title,
+            priority: task.priority,
+          }
+        };
+      });
+
+      // Check for new tasks that are not in current nodes
+      const newTasks = allTasks.filter(t => !nds.some(n => n.id === t.id));
+      if (newTasks.length > 0) {
+        const newNodes: Node<NodeData>[] = newTasks.map(task => ({
+          id: task.id,
+          type: 'task',
+          data: { 
+            title: task.title, 
+            priority: task.priority,
+            columnTitle: task.columnTitle,
+            onClick: () => onTaskClick(task.id)
+          },
+          position: { x: task.graphX ?? 0, y: task.graphY ?? 0 },
+        }));
+        return [...updatedNodes, ...newNodes];
+      }
+
+      return updatedNodes;
+    });
+  }, [board, isInitialLayoutDone, setNodes, setEdges, onTaskClick]);
 
   const onConnect = useCallback(
     async (params: Connection) => {
@@ -268,9 +293,22 @@ function DependencyGraphContent({ board, onTaskClick }: DependencyGraphProps) {
       const res = await addTaskDependency(board.id, params.target, params.source);
       if (res.error) {
         console.error(res.error);
+      } else {
+        router.refresh();
       }
     },
-    [board.id]
+    [board.id, router]
+  );
+
+  const onEdgesDelete = useCallback(
+    async (deletedEdges: Edge[]) => {
+      for (const edge of deletedEdges) {
+        // In our edges, source is precedingTaskId, target is dependentTaskId
+        await removeTaskDependency(board.id, edge.target, edge.source);
+      }
+      router.refresh();
+    },
+    [board.id, router]
   );
 
   const onNodeDragStop = useCallback(
@@ -288,6 +326,7 @@ function DependencyGraphContent({ board, onTaskClick }: DependencyGraphProps) {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onEdgesDelete={onEdgesDelete}
         onNodeDragStop={onNodeDragStop}
         nodeTypes={nodeTypes}
         fitView

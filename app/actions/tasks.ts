@@ -282,6 +282,19 @@ export async function addTaskDependency(
   }
 
   try {
+    // Check if user has access to the board
+    const board = await prisma.board.findFirst({
+      where: {
+        id: boardId,
+        OR: [
+          { userId: session.user.id },
+          { members: { some: { userId: session.user.id } } }
+        ]
+      }
+    });
+
+    if (!board) return { error: "Forbidden" };
+
     // Fetch task titles for audit logs
     const [depTask, preTask] = await prisma.$transaction([
       prisma.task.findUnique({ where: { id: dependentTaskId }, select: { title: true } }),
@@ -340,6 +353,19 @@ export async function removeTaskDependency(
   if (!session?.user?.id) return { error: "Unauthorized" };
 
   try {
+    // Check if user has access to the board
+    const board = await prisma.board.findFirst({
+      where: {
+        id: boardId,
+        OR: [
+          { userId: session.user.id },
+          { members: { some: { userId: session.user.id } } }
+        ]
+      }
+    });
+
+    if (!board) return { error: "Forbidden" };
+
     // Fetch task titles for audit logs
     const [depTask, preTask] = await prisma.$transaction([
       prisma.task.findUnique({ where: { id: dependentTaskId }, select: { title: true } }),

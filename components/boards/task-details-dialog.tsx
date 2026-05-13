@@ -115,7 +115,8 @@ export function TaskDetailsDialog({
   const { data: session } = useSession();
   const isCreator = session?.user?.id === task.userId;
   const isBoardOwner = session?.user?.id === boardOwnerId;
-  const canEdit = isCreator || isBoardOwner;
+  const isMember = members.some((m) => m.user.id === session?.user?.id);
+  const canEdit = isCreator || isBoardOwner || isMember;
 
   const router = useRouter();
   const locale = useLocale();
@@ -416,14 +417,16 @@ export function TaskDetailsDialog({
                       <Badge key={dep.precedingTaskId} variant="secondary" className="pl-2 pr-1 py-1 gap-1 flex items-center">
                         <LinkIcon className="h-3 w-3 text-muted-foreground" />
                         <span className="max-w-[150px] truncate">{depTask?.title || dep.precedingTaskId}</span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-4 w-4 hover:bg-destructive hover:text-destructive-foreground rounded-full"
-                          onClick={() => handleRemoveDependency(dep.precedingTaskId)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
+                        {canEdit && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4 hover:bg-destructive hover:text-destructive-foreground rounded-full"
+                            onClick={() => handleRemoveDependency(dep.precedingTaskId)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
                       </Badge>
                     );
                   })}
