@@ -278,36 +278,51 @@ export async function addTaskDependency(
   if (!session?.user?.id) return { error: "Unauthorized" };
 
   if (dependentTaskId === precedingTaskId) {
-    return { error: "A task cannot depend on itself" };
+    return { error: "Task cannot depend on itself" };
   }
 
   try {
-    // Simple check if it already exists
-    const existing = await prisma.taskDependency.findUnique({
+    // Fetch task titles for audit logs
+    const [depTask, preTask] = await prisma.$transaction([
+      prisma.task.findUnique({ where: { id: dependentTaskId }, select: { title: true } }),
+      prisma.task.findUnique({ where: { id: precedingTaskId }, select: { title: true } }),
+    ]);
+
+    if (!depTask || !preTask) return { error: "Tasks not found" };
+
+    await prisma.taskDependency.upsert({
       where: {
         dependentTaskId_precedingTaskId: {
           dependentTaskId,
           precedingTaskId,
         },
       },
-    });
-
-    if (existing) return { success: true };
-
-    await prisma.taskDependency.create({
-      data: {
+      update: {},
+      create: {
         dependentTaskId,
         precedingTaskId,
       },
     });
 
+    // Log for the dependent task
     await createAuditLog({
       entityId: dependentTaskId,
-      entityType: EntityType.DEPENDENCY,
-      action: AuditAction.CREATE,
-      newData: { precedingTaskId },
+      entityTitle: depTask.title,
+      entityType: EntityType.TASK,
+      action: AuditAction.UPDATE,
+      newData: { dependencyAdded: preTask.title },
     });
 
+    // Log for the preceding task
+    await createAuditLog({
+      entityId: precedingTaskId,
+      entityTitle: preTask.title,
+      entityType: EntityType.TASK,
+      action: AuditAction.UPDATE,
+      newData: { prerequisiteFor: depTask.title },
+    });
+
+    await touchBoard(boardId);
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
   } catch (error) {
@@ -325,7 +340,13 @@ export async function removeTaskDependency(
   if (!session?.user?.id) return { error: "Unauthorized" };
 
   try {
-    const dependency = await prisma.taskDependency.delete({
+    // Fetch task titles for audit logs
+    const [depTask, preTask] = await prisma.$transaction([
+      prisma.task.findUnique({ where: { id: dependentTaskId }, select: { title: true } }),
+      prisma.task.findUnique({ where: { id: precedingTaskId }, select: { title: true } }),
+    ]);
+
+    await prisma.taskDependency.delete({
       where: {
         dependentTaskId_precedingTaskId: {
           dependentTaskId,
@@ -334,17 +355,31 @@ export async function removeTaskDependency(
       },
     });
 
-    await createAuditLog({
-      entityId: dependency.dependentTaskId,
-      entityTitle: `Dependency on ${precedingTaskId} removed`,
-      entityType: EntityType.DEPENDENCY,
-      action: AuditAction.DELETE,
-    });
+    if (depTask && preTask) {
+      // Log for the dependent task
+      await createAuditLog({
+        entityId: dependentTaskId,
+        entityTitle: depTask.title,
+        entityType: EntityType.TASK,
+        action: AuditAction.UPDATE,
+        newData: { dependencyRemoved: preTask.title },
+      });
+
+      // Log for the preceding task
+      await createAuditLog({
+        entityId: precedingTaskId,
+        entityTitle: preTask.title,
+        entityType: EntityType.TASK,
+        action: AuditAction.UPDATE,
+        newData: { prerequisiteRemoved: depTask.title },
+      });
+    }
 
     await touchBoard(boardId);
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
-  } catch {
+  } catch (error) {
+    console.error("Failed to remove dependency:", error);
     return { error: "Failed to remove dependency" };
   }
 }

@@ -148,6 +148,17 @@ export function ActivityHistory({ entityId, entityType, refreshKey }: ActivityHi
         );
       }
 
+      if (["dependencyAdded", "prerequisiteFor", "dependencyRemoved", "prerequisiteRemoved"].includes(key)) {
+        return (
+          <div
+            key={key}
+            className="text-[11px] text-muted-foreground mt-0.5 pl-2 border-l-2 border-primary/20"
+          >
+            • {t(key, { title: String(newVal || oldVal) })}
+          </div>
+        );
+      }
+
       // Default rendering for simple fields
       if (newVal === undefined || oldVal === undefined) {
          // This might be a partial update log where we only have newData or oldData for specific fields

@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
 import { Priority } from "@prisma/client";
 import { Kanban, GitGraph } from "lucide-react";
@@ -85,6 +86,7 @@ type BoardViewProps = {
 
 export function BoardView({ board }: BoardViewProps) {
   const { data: session } = useSession();
+  const t = useTranslations("boards");
   const isOwner = session?.user?.id === board.userId;
 
   const searchParams = useSearchParams();
@@ -247,7 +249,7 @@ export function BoardView({ board }: BoardViewProps) {
                 )}
               >
                 <Kanban className="h-4 w-4" />
-                Kanban
+                {t("kanban")}
               </button>
               <button
                 onClick={() => setView("graph")}
@@ -259,7 +261,7 @@ export function BoardView({ board }: BoardViewProps) {
                 )}
               >
                 <GitGraph className="h-4 w-4" />
-                Graph
+                {t("graph")}
               </button>
             </div>
 

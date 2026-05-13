@@ -111,8 +111,13 @@
     "column": "колонку",
     "task": "завдання",
     "subtask": "підзавдання",
-    "label": "мітку",
+    "label": "мітка",
     "title": "Назва",
+    "kanban": "Канбан",
+    "graph": "Граф",
+    "low": "Низький",
+    "medium": "Середній",
+    "high": "Високий",
     "labelAdded": "Мітку додано",
     "labelRemoved": "Мітку видалено",
     "assigneesUpdated": "Виконавців оновлено",
@@ -128,6 +133,10 @@
     "dragInstructions": "Перетягуйте ноди для зміни вигляду",
     "connectInstructions": "З'єднуйте точки для створення зв'язків",
     "clickInstructions": "Натисніть на завдання для деталей",
-    "autoArrange": "Авто-розстановка завдань"
+    "autoArrange": "Авто-розстановка завдань",
+    "dependencyAdded": "Додано залежність від: {title}",
+    "prerequisiteFor": "Стало передумовою для: {title}",
+    "dependencyRemoved": "Видалено залежність від: {title}",
+    "prerequisiteRemoved": "Більше не є передумовою для: {title}"
   }
 }

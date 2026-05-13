@@ -113,6 +113,11 @@
     "subtask": "subtask",
     "label": "label",
     "title": "Title",
+    "kanban": "Kanban",
+    "graph": "Graph",
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
     "labelAdded": "Label added",
     "labelRemoved": "Label removed",
     "assigneesUpdated": "Assignees updated",
@@ -128,6 +133,10 @@
     "dragInstructions": "Drag nodes to rearrange layout",
     "connectInstructions": "Connect handles to link tasks",
     "clickInstructions": "Click task to open details",
-    "autoArrange": "Auto-arrange tasks"
+    "autoArrange": "Auto-arrange tasks",
+    "dependencyAdded": "Dependency added: {title}",
+    "prerequisiteFor": "Became prerequisite for: {title}",
+    "dependencyRemoved": "Dependency removed: {title}",
+    "prerequisiteRemoved": "Prerequisite removed: {title}"
   }
 }

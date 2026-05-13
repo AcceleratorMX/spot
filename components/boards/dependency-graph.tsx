@@ -9,12 +9,14 @@ import {
   Position,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   addEdge,
   type Connection,
   type NodeProps,
   type Edge,
   type Node,
   Panel,
+  ReactFlowProvider,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
@@ -98,6 +100,7 @@ const getLayoutedElements = (nodes: Node<NodeData>[], edges: Edge[], direction =
 
 // --- Custom Task Node component ---
 const TaskNode = ({ data }: NodeProps<Node<NodeData>>) => {
+  const t = useTranslations("boards");
   const priority = data.priority;
   
   const priorityColors = {
@@ -121,7 +124,7 @@ const TaskNode = ({ data }: NodeProps<Node<NodeData>>) => {
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
             <Badge className={cn("text-[9px] font-bold uppercase h-4 px-1", priorityColors[priority])} variant="outline">
-              {priority}
+              {t(priority.toLowerCase())}
             </Badge>
             <div className="text-[9px] text-muted-foreground font-medium truncate max-w-[80px]">
               {data.columnTitle as string}
@@ -145,15 +148,16 @@ const nodeTypes = {
   task: TaskNode,
 };
 
-export function DependencyGraph({ board, onTaskClick }: DependencyGraphProps) {
+function DependencyGraphContent({ board, onTaskClick }: DependencyGraphProps) {
   const { theme } = useTheme();
   const t = useTranslations("boards");
+  const { fitView } = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<NodeData>>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [isInitialLayoutDone, setIsInitialLayoutDone] = React.useState(false);
 
   // Function to apply layout
-  const applyLayout = useCallback((forceDagre = false) => {
+  const applyLayout = useCallback(async (forceDagre = false) => {
     const allTasksWithColumn = board.columns.flatMap((col) => 
       col.tasks.map(t => ({ ...t, columnTitle: col.title }))
     );
@@ -192,21 +196,31 @@ export function DependencyGraph({ board, onTaskClick }: DependencyGraphProps) {
     );
 
     if (nodesToLayout.length > 0 || forceDagre) {
-      // If some nodes don't have positions, or we force layout, use dagre
+      // Use dagre
       const allNodes = [...nodesWithSavedPositions, ...nodesToLayout];
       const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(allNodes, currentEdges);
       
-      // If we are NOT forcing dagre, we should only apply positions to those who didn't have them
-      // but getLayoutedElements layouts everything. For simplicity, if we mix, we layout everything once.
       setNodes(layoutedNodes);
       setEdges(layoutedEdges);
+
+      // Persist positions if it was a forced layout
+      if (forceDagre) {
+        layoutedNodes.forEach(node => {
+          updateTaskPosition(node.id, board.id, node.position.x, node.position.y);
+        });
+      }
+
+      // Small delay to let React Flow update before fitting view
+      setTimeout(() => fitView({ padding: 0.2, duration: 800 }), 50);
     } else {
       setNodes(nodesWithSavedPositions);
       setEdges(currentEdges);
+      // Fit view even for saved positions if it's the first render
+      setTimeout(() => fitView({ padding: 0.2, duration: 800 }), 50);
     }
-  }, [board, onTaskClick, setNodes, setEdges]);
+  }, [board, onTaskClick, setNodes, setEdges, fitView]);
 
-  // Initial layout only once or when board ID changes
+  // Initial layout only once per mount
   useEffect(() => {
     if (!isInitialLayoutDone && board.columns.length > 0) {
       applyLayout();
@@ -300,5 +314,13 @@ export function DependencyGraph({ board, onTaskClick }: DependencyGraphProps) {
         </Panel>
       </ReactFlow>
     </div>
+  );
+}
+
+export function DependencyGraph(props: DependencyGraphProps) {
+  return (
+    <ReactFlowProvider>
+      <DependencyGraphContent {...props} />
+    </ReactFlowProvider>
   );
 }
