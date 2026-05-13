@@ -55,17 +55,17 @@ test.describe("Sidebar Navigation", () => {
     // Initially SPOT text should be visible
     await expect(page.getByTestId("sidebar").getByText("SPOT")).toBeVisible();
 
-    // Click collapse toggle (force to bypass dev overlay)
-    await page.locator("#sidebar-toggle").click({ force: true });
+    // Click collapse toggle — use dispatchEvent to bypass any dev overlays
+    await page.locator("#sidebar-toggle").dispatchEvent("click");
 
-    // SPOT text should be hidden
-    await expect(page.getByTestId("sidebar").getByText("SPOT")).not.toBeVisible();
+    // SPOT text should be removed from DOM when collapsed
+    await expect(page.getByTestId("sidebar").getByText("SPOT")).toBeHidden({ timeout: 5000 });
 
     // Expand again
-    await page.locator("#sidebar-toggle").click({ force: true });
+    await page.locator("#sidebar-toggle").dispatchEvent("click");
 
     // SPOT text visible again
-    await expect(page.getByTestId("sidebar").getByText("SPOT")).toBeVisible();
+    await expect(page.getByTestId("sidebar").getByText("SPOT")).toBeVisible({ timeout: 5000 });
   });
 });
 
