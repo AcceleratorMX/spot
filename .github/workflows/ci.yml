@@ -11,6 +11,26 @@ jobs:
     name: Lint, Test & Build
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: spot
+          POSTGRES_PASSWORD: spot
+          POSTGRES_DB: spot
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U spot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: "postgresql://spot:spot@localhost:5432/spot"
+      AUTH_SECRET: "ci-test-secret-at-least-32-chars-long"
+      AUTH_URL: "http://localhost:3000"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,11 +51,20 @@ jobs:
       - name: Generate Prisma client
         run: pnpm exec prisma generate
 
+      - name: Push database schema
+        run: pnpm exec prisma db push
+
       - name: Lint
         run: pnpm lint
 
       - name: Unit tests
         run: pnpm test
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E tests
+        run: pnpm test:e2e
 
       - name: Build
         run: pnpm build

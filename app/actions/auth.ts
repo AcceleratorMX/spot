@@ -32,7 +32,7 @@ export async function signUp(
     };
   }
 
-  const { name, email, password } = validated.data;
+  const { email, password, name } = validated.data;
 
   const existingUser = await prisma.user.findUnique({
     where: { email },
