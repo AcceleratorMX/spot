@@ -37,6 +37,7 @@ type Task = {
   labels: { label: { id: string; name: string; color: string } }[];
   order: number;
   columnId: string;
+  userId: string | null;
 };
 
 type Column = {

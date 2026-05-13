@@ -102,6 +102,24 @@
     "urgent": "Urgent",
     "pickDate": "Pick a date",
     "noDate": "No date",
-    "deleteBoard": "Delete Board"
+    "deleteBoard": "Delete Board",
+    "activity": "Activity",
+    "created": "created",
+    "updated": "updated",
+    "deleted": "deleted",
+    "board": "board",
+    "column": "column",
+    "task": "task",
+    "subtask": "subtask",
+    "label": "label",
+    "title": "Title",
+    "description": "Description",
+    "priority": "Priority",
+    "dueDate": "Due date",
+    "labelAdded": "Label added",
+    "labelRemoved": "Label removed",
+    "assigneesUpdated": "Assignees updated",
+    "subtaskAdded": "Subtask added",
+    "subtaskRemoved": "Subtask removed"
   }
 }

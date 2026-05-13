@@ -102,6 +102,24 @@
     "urgent": "Терміново",
     "pickDate": "Оберіть дату",
     "noDate": "Без дати",
-    "deleteBoard": "Видалити дошку"
+    "deleteBoard": "Видалити дошку",
+    "activity": "Активність",
+    "created": "створив(ла)",
+    "updated": "оновив(ла)",
+    "deleted": "видалив(ла)",
+    "board": "дошку",
+    "column": "колонку",
+    "task": "завдання",
+    "subtask": "підзавдання",
+    "label": "мітку",
+    "title": "Назва",
+    "description": "Опис",
+    "priority": "Пріоритет",
+    "dueDate": "Термін",
+    "labelAdded": "Мітку додано",
+    "labelRemoved": "Мітку видалено",
+    "assigneesUpdated": "Виконавців оновлено",
+    "subtaskAdded": "Підзавдання додано",
+    "subtaskRemoved": "Підзавдання видалено"
   }
 }

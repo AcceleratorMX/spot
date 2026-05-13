@@ -1,13 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
-import { updateTask, deleteTask, createSubtask, toggleSubtask, deleteSubtask } from "@/app/actions/tasks";
+import {
+  updateTask,
+  deleteTask,
+  createSubtask,
+  toggleSubtask,
+  deleteSubtask,
+} from "@/app/actions/tasks";
 import { addTaskLabel, removeTaskLabel } from "@/app/actions/labels";
 import { useRouter } from "next/navigation";
 import { Priority } from "@prisma/client";
-import { Plus, X, Calendar as CalendarIcon } from "lucide-react";
+import { Plus, X, Calendar as CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { uk, enUS } from "date-fns/locale";
 import { useLocale } from "next-intl";
@@ -16,7 +22,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -42,6 +47,8 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { ActivityHistory } from "./activity-history";
+import { EntityType } from "@prisma/client";
 
 type Task = {
   id: string;
@@ -85,24 +92,34 @@ export function TaskDetailsDialog({
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedAssignees, setSelectedAssignees] = useState(
-    task.participants.map((p) => p.userId)
+    task.participants.map((p) => p.userId),
   );
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || "");
   const [priority, setPriority] = useState<Priority>(task.priority);
   const [dueDate, setDueDate] = useState<Date | undefined>(
-    task.dueDate ? new Date(task.dueDate) : undefined
+    task.dueDate ? new Date(task.dueDate) : undefined,
   );
+
+  const [activityKey, setActivityKey] = useState(0);
+  const refreshActivity = useCallback(
+    () => setActivityKey((prev) => prev + 1),
+    [],
+  );
+
   const { data: session } = useSession();
   const isCreator = session?.user?.id === task.userId;
   const isBoardOwner = session?.user?.id === boardOwnerId;
   const canEdit = isCreator || isBoardOwner;
+
   const router = useRouter();
   const locale = useLocale();
   const dateLocale = locale === "uk" ? uk : enUS;
+  const t = useTranslations("boards");
 
   const [prevTask, setPrevTask] = useState(task);
 
+  // Synchronize internal state when task changes (e.g. from server refresh)
   if (task !== prevTask) {
     setSelectedAssignees(task.participants.map((p) => p.userId));
     setTitle(task.title);
@@ -111,22 +128,54 @@ export function TaskDetailsDialog({
     setDueDate(task.dueDate ? new Date(task.dueDate) : undefined);
     setPrevTask(task);
   }
-  const t = useTranslations("boards");
 
-  async function handleAction() {
-    setLoading(true);
+  // Auto-save logic
+  useEffect(() => {
+    if (!open || !canEdit) return;
 
-    await updateTask(task.id, boardId, {
-      title,
-      description,
-      priority,
-      dueDate: dueDate || null,
-      assigneeUserIds: selectedAssignees,
-    });
+    const timer = setTimeout(async () => {
+      // Check for changes
+      const hasTitleChanged = title !== task.title;
+      const hasDescriptionChanged = description !== (task.description || "");
+      const hasPriorityChanged = priority !== task.priority;
+      const hasDateChanged =
+        JSON.stringify(dueDate) !==
+        JSON.stringify(task.dueDate ? new Date(task.dueDate) : undefined);
 
-    setLoading(false);
-    onOpenChange(false);
-  }
+      if (
+        !hasTitleChanged &&
+        !hasDescriptionChanged &&
+        !hasPriorityChanged &&
+        !hasDateChanged
+      ) {
+        return;
+      }
+
+      setLoading(true);
+      await updateTask(task.id, boardId, {
+        title,
+        description,
+        priority,
+        dueDate: dueDate || null,
+      });
+      setLoading(false);
+      refreshActivity();
+      router.refresh();
+    }, 800); // 800ms debounce
+
+    return () => clearTimeout(timer);
+  }, [
+    title,
+    description,
+    priority,
+    dueDate,
+    open,
+    canEdit,
+    boardId,
+    task,
+    router,
+    refreshActivity,
+  ]);
 
   const handleDelete = async () => {
     setLoading(true);
@@ -139,37 +188,52 @@ export function TaskDetailsDialog({
     const newAssignees = selectedAssignees.includes(userId)
       ? selectedAssignees.filter((id) => id !== userId)
       : [...selectedAssignees, userId];
-    
+
     setSelectedAssignees(newAssignees);
+    setLoading(true);
     await updateTask(task.id, boardId, { assigneeUserIds: newAssignees });
+    setLoading(false);
+    refreshActivity();
     router.refresh();
   };
 
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const handleAddSubtask = async () => {
     if (!newSubtaskTitle.trim()) return;
+    setLoading(true);
     await createSubtask(task.id, newSubtaskTitle, boardId);
     setNewSubtaskTitle("");
+    setLoading(false);
+    refreshActivity();
     router.refresh();
   };
 
   const handleToggleSubtask = async (id: string, isDone: boolean) => {
+    setLoading(true);
     await toggleSubtask(id, isDone, boardId);
+    setLoading(false);
+    refreshActivity();
     router.refresh();
   };
 
   const handleDeleteSubtask = async (id: string) => {
+    setLoading(true);
     await deleteSubtask(id, boardId);
+    setLoading(false);
+    refreshActivity();
     router.refresh();
   };
 
   const handleToggleLabel = async (labelId: string) => {
+    setLoading(true);
     const isSelected = task.labels.some((tl) => tl.label.id === labelId);
     if (isSelected) {
       await removeTaskLabel(task.id, labelId, boardId);
     } else {
       await addTaskLabel(task.id, labelId, boardId);
     }
+    setLoading(false);
+    refreshActivity();
     router.refresh();
   };
 
@@ -177,209 +241,259 @@ export function TaskDetailsDialog({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t("taskTitle")}</DialogTitle>
-            <DialogDescription className="sr-only">
-              {t("addTaskDesc")}
-            </DialogDescription>
+          <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="space-y-1">
+              <DialogTitle>{t("taskTitle")}</DialogTitle>
+              <DialogDescription className="sr-only">
+                {t("addTaskDesc")}
+              </DialogDescription>
+            </div>
+            {loading && (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            )}
           </DialogHeader>
-          <form action={handleAction}>
-            <div className="grid gap-4 py-4">
+
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label
+                htmlFor="title"
+                className="text-xs font-bold uppercase text-muted-foreground"
+              >
+                {t("taskTitle")}
+              </Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Task title..."
+                className="font-semibold text-lg border-none px-0 focus-visible:ring-0 h-auto"
+                disabled={!canEdit}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label
+                htmlFor="description"
+                className="text-xs font-bold uppercase text-muted-foreground"
+              >
+                {t("description")}
+              </Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t("descPlaceholder")}
+                className="resize-none min-h-[100px] bg-muted/30 focus-visible:ring-1"
+                disabled={!canEdit}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="title">{t("taskTitle")}</Label>
-                <Input
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
+                <Label
+                  htmlFor="priority"
+                  className="text-xs font-bold uppercase text-muted-foreground"
+                >
+                  {t("priority")}
+                </Label>
+                <Select
+                  name="priority"
+                  value={priority}
+                  onValueChange={(value: Priority) => setPriority(value)}
                   disabled={!canEdit}
-                />
+                >
+                  <SelectTrigger id="priority" className="bg-muted/30">
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={Priority.LOW}>{t("low")}</SelectItem>
+                    <SelectItem value={Priority.MEDIUM}>
+                      {t("medium")}
+                    </SelectItem>
+                    <SelectItem value={Priority.HIGH}>{t("high")}</SelectItem>
+                    <SelectItem value={Priority.URGENT}>
+                      {t("urgent")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="description">{t("description")}</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder={t("descPlaceholder")}
-                  disabled={!canEdit}
-                />
+                <Label
+                  htmlFor="dueDate"
+                  className="text-xs font-bold uppercase text-muted-foreground"
+                >
+                  {t("dueDate")}
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-muted/30",
+                        !dueDate && "text-muted-foreground",
+                      )}
+                      disabled={!canEdit}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dueDate ? (
+                        format(dueDate, "PPP", { locale: dateLocale })
+                      ) : (
+                        <span>{t("pickDate")}</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dueDate}
+                      onSelect={(date) => {
+                        setDueDate(date);
+                        // Force refresh for date as it's not a text input
+                        setTimeout(() => refreshActivity(), 500);
+                      }}
+                      locale={dateLocale}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="priority">{t("priority")}</Label>
-                  <Select
-                    name="priority"
-                    value={priority}
-                    onValueChange={(value: Priority) => setPriority(value)}
-                    disabled={!canEdit}
+            </div>
+
+            <div className="grid gap-2">
+              <Label className="text-xs font-bold uppercase text-muted-foreground">
+                {t("assignee")}
+              </Label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {members.map((member) => {
+                  const isAssigned = selectedAssignees.includes(member.user.id);
+                  return (
+                    <Badge
+                      key={member.user.id}
+                      variant={isAssigned ? "default" : "outline"}
+                      className="cursor-pointer py-1.5 px-3"
+                      onClick={() => canEdit && toggleAssignee(member.user.id)}
+                    >
+                      {member.user.name || member.user.email}
+                    </Badge>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label className="text-xs font-bold uppercase text-muted-foreground">
+                {t("labels")}
+              </Label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {allLabels.map((label) => {
+                  const isSelected = task.labels.some(
+                    (tl) => tl.label.id === label.id,
+                  );
+                  return (
+                    <Badge
+                      key={label.id}
+                      variant={isSelected ? "default" : "outline"}
+                      className="cursor-pointer"
+                      style={{
+                        backgroundColor: isSelected
+                          ? label.color
+                          : "transparent",
+                        borderColor: label.color,
+                        color: isSelected ? "white" : "inherit",
+                      }}
+                      onClick={() => canEdit && handleToggleLabel(label.id)}
+                    >
+                      {label.name}
+                    </Badge>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label className="text-xs font-bold uppercase text-muted-foreground">
+                {t("subtasks")}
+              </Label>
+              <div className="space-y-2 mt-1 bg-muted/20 p-3 rounded-lg border border-dashed border-muted-foreground/30">
+                {task.subtasks.map((subtask) => (
+                  <div
+                    key={subtask.id}
+                    className="flex items-center justify-between group"
                   >
-                    <SelectTrigger id="priority">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={Priority.LOW}>{t("low")}</SelectItem>
-                      <SelectItem value={Priority.MEDIUM}>{t("medium")}</SelectItem>
-                      <SelectItem value={Priority.HIGH}>{t("high")}</SelectItem>
-                      <SelectItem value={Priority.URGENT}>{t("urgent")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="dueDate">{t("dueDate")}</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !dueDate && "text-muted-foreground"
-                        )}
-                        disabled={!canEdit}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dueDate ? (
-                          format(dueDate, "PPP", { locale: dateLocale })
-                        ) : (
-                          <span>{t("pickDate")}</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dueDate}
-                        onSelect={setDueDate}
-                        locale={dateLocale}
-                        disabled={{ before: new Date() }}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label>{t("assignee")}</Label>
-                <div className="grid grid-cols-2 gap-2 mt-1">
-                  {members.map((member) => (
-                    <div key={member.user.id} className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2">
                       <Checkbox
-                        id={`user-${member.user.id}`}
-                        checked={selectedAssignees.includes(member.user.id)}
-                        onCheckedChange={() => toggleAssignee(member.user.id)}
-                        disabled={!canEdit}
+                        id={`sub-${subtask.id}`}
+                        checked={subtask.isDone}
+                        onCheckedChange={(checked) =>
+                          handleToggleSubtask(subtask.id, !!checked)
+                        }
                       />
                       <Label
-                        htmlFor={`user-${member.user.id}`}
-                        className="text-sm font-normal cursor-pointer"
+                        htmlFor={`sub-${subtask.id}`}
+                        className={`text-sm font-normal cursor-pointer ${subtask.isDone ? "line-through text-muted-foreground" : ""}`}
                       >
-                        {member.user.name || member.user.email}
+                        {subtask.title}
                       </Label>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label>{t("labels") || "Labels"}</Label>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {allLabels.map((label) => {
-                    const isSelected = task.labels.some((l) => l.label.id === label.id);
-                    return (
-                      <Badge
-                        key={label.id}
-                        variant={isSelected ? "default" : "outline"}
-                        className="cursor-pointer"
-                        style={{
-                          backgroundColor: isSelected ? label.color : "transparent",
-                          borderColor: label.color,
-                          color: isSelected ? "white" : "inherit",
-                        }}
-                        onClick={() => canEdit && handleToggleLabel(label.id)}
-                      >
-                        {label.name}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label>{t("subtasks") || "Subtasks"}</Label>
-                <div className="space-y-2 mt-1">
-                  {task.subtasks.map((subtask) => (
-                    <div key={subtask.id} className="flex items-center justify-between group">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`sub-${subtask.id}`}
-                          checked={subtask.isDone}
-                          onCheckedChange={(checked) => handleToggleSubtask(subtask.id, !!checked)}
-                        />
-                        <Label
-                          htmlFor={`sub-${subtask.id}`}
-                          className={`text-sm font-normal cursor-pointer ${subtask.isDone ? "line-through text-muted-foreground" : ""}`}
-                        >
-                          {subtask.title}
-                        </Label>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => handleDeleteSubtask(subtask.id)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
-                  <div className="flex items-center gap-2 mt-2">
-                    <Input
-                      placeholder={t("addSubtask") || "Add subtask..."}
-                      value={newSubtaskTitle}
-                      onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleAddSubtask();
-                        }
-                      }}
-                      className="h-8"
-                    />
                     <Button
                       type="button"
+                      variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
-                      onClick={handleAddSubtask}
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleDeleteSubtask(subtask.id)}
                     >
-                      <Plus className="h-4 w-4" />
+                      <X className="h-3 w-3" />
                     </Button>
                   </div>
+                ))}
+                <div className="flex items-center gap-2 mt-2">
+                  <Input
+                    placeholder={t("addSubtask") || "Add subtask..."}
+                    value={newSubtaskTitle}
+                    onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddSubtask();
+                      }
+                    }}
+                    className="h-8 bg-background"
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={handleAddSubtask}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </div>
-            {canEdit && (
-              <DialogFooter className="flex items-center justify-between">
+
+            <div className="flex items-center justify-between mt-2 pt-2 border-t">
+              <span className="text-[10px] text-muted-foreground italic">
+                {loading ? "Saving changes..." : "All changes saved"}
+              </span>
+              {canEdit && (
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon"
-                  className="text-destructive"
+                  size="sm"
+                  className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                   onClick={() => setShowDeleteConfirm(true)}
-                  disabled={loading}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Task
                 </Button>
-                <div className="flex gap-2">
-                  <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? "..." : "Save changes"}
-                  </Button>
-                </div>
-              </DialogFooter>
-            )}
-          </form>
+              )}
+            </div>
+
+            <ActivityHistory
+              entityId={task.id}
+              entityType={EntityType.TASK}
+              refreshKey={activityKey}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 

@@ -4,7 +4,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { boardSchema } from "@/lib/validations/board";
 import { revalidatePath } from "next/cache";
-import { Prisma } from "@prisma/client";
+import { Prisma, AuditAction, EntityType } from "@prisma/client";
+import { createAuditLog } from "@/lib/audit";
 
 const boardInclude = {
   user: true,
@@ -167,9 +168,20 @@ export async function createBoard(formData: FormData) {
       },
     });
 
+    await createAuditLog({
+      entityId: board.id,
+      entityTitle: board.title,
+      entityType: EntityType.BOARD,
+      action: AuditAction.CREATE,
+      newData: board,
+    });
+
     revalidatePath("/boards");
     return { success: true, boardId: board.id };
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
+      return { error: "Session expired or user not found. Please sign out and sign in again." };
+    }
     console.error("Failed to create board:", error);
     return { error: "Failed to create board" };
   }
@@ -177,17 +189,28 @@ export async function createBoard(formData: FormData) {
 
 export async function deleteBoard(id: string) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return { error: "Unauthorized" };
-  }
+  if (!session?.user?.id) return { error: "Unauthorized" };
 
   try {
     // Only owner can delete
-    await prisma.board.delete({
-      where: {
-        id,
-        userId: session.user.id,
-      },
+    const existingBoard = await prisma.board.findUnique({
+      where: { id }
+    });
+
+    if (!existingBoard || existingBoard.userId !== session.user.id) {
+      return { error: "Forbidden" };
+    }
+
+    const board = await prisma.board.delete({
+      where: { id }
+    });
+
+    await createAuditLog({
+      entityId: board.id,
+      entityTitle: board.title,
+      entityType: EntityType.BOARD,
+      action: AuditAction.DELETE,
+      oldData: board,
     });
 
     revalidatePath("/boards");
@@ -203,9 +226,29 @@ export async function updateBoard(id: string, data: { title?: string; descriptio
   if (!session?.user?.id) return { error: "Unauthorized" };
 
   try {
-    await prisma.board.update({
+    const existingBoard = await prisma.board.findUnique({
+      where: { id }
+    });
+
+    if (!existingBoard) return { error: "Board not found" };
+    
+    // Only owner can update board settings
+    if (existingBoard.userId !== session.user.id) {
+      return { error: "Forbidden" };
+    }
+
+    const board = await prisma.board.update({
       where: { id },
       data
+    });
+
+    await createAuditLog({
+      entityId: board.id,
+      entityTitle: board.title,
+      entityType: EntityType.BOARD,
+      action: AuditAction.UPDATE,
+      oldData: { title: existingBoard.title, description: existingBoard.description },
+      newData: data,
     });
 
     revalidatePath(`/boards/${id}`);
@@ -268,6 +311,13 @@ export async function inviteMember(boardId: string, email: string) {
         userId: userToInvite.id,
         role: "MEMBER"
       }
+    });
+
+    await createAuditLog({
+      entityId: boardId,
+      entityType: EntityType.BOARD,
+      action: AuditAction.UPDATE,
+      newData: { invitedUser: userToInvite.email },
     });
 
     revalidatePath(`/boards/${boardId}`);
