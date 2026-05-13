@@ -24,9 +24,12 @@ type Task = {
   }[];
   subtasks: { id: string; title: string; isDone: boolean }[];
   labels: { label: { id: string; name: string; color: string } }[];
+  dependencies: { precedingTaskId: string }[];
   order: number;
   columnId: string;
   userId: string | null;
+  graphX: number | null;
+  graphY: number | null;
 };
 
 type Column = {
@@ -52,9 +55,10 @@ type ColumnViewProps = {
   members: Member[];
   allLabels: { id: string; name: string; color: string }[];
   boardOwnerId: string;
+  allTasks: { id: string; title: string }[];
 };
 
-export function ColumnView({ column, index, boardId, members, allLabels, boardOwnerId }: ColumnViewProps) {
+export function ColumnView({ column, index, boardId, members, allLabels, boardOwnerId, allTasks }: ColumnViewProps) {
   return (
     <Draggable draggableId={column.id} index={index}>
       {(provided) => (
@@ -100,6 +104,7 @@ export function ColumnView({ column, index, boardId, members, allLabels, boardOw
                           members={members}
                           allLabels={allLabels}
                           boardOwnerId={boardOwnerId}
+                          allTasks={allTasks}
                         />
                       ))}
                     </div>

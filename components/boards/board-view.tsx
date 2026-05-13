@@ -1,22 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
 import { Priority } from "@prisma/client";
+import { Kanban, GitGraph } from "lucide-react";
 import { updateColumnOrder } from "@/app/actions/columns";
 import { updateTaskOrder } from "@/app/actions/tasks";
 import { ColumnView } from "./column-view";
 import { CreateColumnDialog } from "./create-column-dialog";
 import { InviteMemberDialog } from "./invite-member-dialog";
 import { BoardSettingsDialog } from "./board-settings-dialog";
+import { TaskDetailsDialog } from "./task-details-dialog";
+import { DependencyGraph } from "./dependency-graph";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 type Task = {
   id: string;
@@ -35,9 +40,12 @@ type Task = {
   }[];
   subtasks: { id: string; title: string; isDone: boolean }[];
   labels: { label: { id: string; name: string; color: string } }[];
+  dependencies: { precedingTaskId: string }[];
   order: number;
   columnId: string;
   userId: string | null;
+  graphX: number | null;
+  graphY: number | null;
 };
 
 type Column = {
@@ -78,11 +86,23 @@ type BoardViewProps = {
 
 export function BoardView({ board }: BoardViewProps) {
   const { data: session } = useSession();
+  const t = useTranslations("boards");
   const isOwner = session?.user?.id === board.userId;
+
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const view = (searchParams.get("view") as "kanban" | "graph") || "kanban";
 
   const [columns, setColumns] = useState(board.columns);
   const [prevColumns, setPrevColumns] = useState(board.columns);
-  const router = useRouter();
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+
+  const setView = (newView: "kanban" | "graph") => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("view", newView);
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -93,6 +113,11 @@ export function BoardView({ board }: BoardViewProps) {
 
     return () => clearInterval(interval);
   }, [router]);
+
+  const selectedTask = useMemo(() => {
+    if (!selectedTaskId) return null;
+    return columns.flatMap((c) => c.tasks).find((t) => t.id === selectedTaskId);
+  }, [selectedTaskId, columns]);
 
   if (board.columns !== prevColumns) {
     setColumns(board.columns);
@@ -196,9 +221,9 @@ export function BoardView({ board }: BoardViewProps) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex flex-col px-6 py-4 gap-4">
+      <div className="flex flex-col px-6 py-4 gap-4 border-b bg-background/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <div className="space-y-1">
               <h1 className="text-2xl font-bold tracking-tight">
                 {board.title}
@@ -211,7 +236,35 @@ export function BoardView({ board }: BoardViewProps) {
             </div>
             {isOwner && <BoardSettingsDialog board={board} />}
           </div>
+          
           <div className="flex items-center gap-4">
+            <div className="flex items-center bg-muted/50 p-1 rounded-lg border">
+              <button
+                onClick={() => setView("kanban")}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all",
+                  view === "kanban" 
+                    ? "bg-background text-foreground shadow-sm" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Kanban className="h-4 w-4" />
+                {t("kanban")}
+              </button>
+              <button
+                onClick={() => setView("graph")}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all",
+                  view === "graph" 
+                    ? "bg-background text-foreground shadow-sm" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <GitGraph className="h-4 w-4" />
+                {t("graph")}
+              </button>
+            </div>
+
             <div className="flex -space-x-2 overflow-hidden">
               {allMembers.map((member) => (
                 <Tooltip key={member.user.id}>
@@ -234,37 +287,60 @@ export function BoardView({ board }: BoardViewProps) {
         </div>
       </div>
 
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable
-          droppableId="all-columns"
-          direction="horizontal"
-          type="column"
-        >
-          {(provided) => (
-            <div
-              {...provided.droppableProps}
-              ref={provided.innerRef}
-              className="flex-1 flex gap-4 p-4 overflow-x-auto overflow-y-hidden min-h-0"
+      <div className="flex-1 overflow-hidden">
+        {view === "kanban" ? (
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable
+              droppableId="all-columns"
+              direction="horizontal"
+              type="column"
             >
-              {columns.map((column, index) => (
-                <ColumnView
-                  key={column.id}
-                  column={column}
-                  index={index}
-                  boardId={board.id}
-                  members={allMembers}
-                  allLabels={board.labels}
-                  boardOwnerId={board.userId}
-                />
-              ))}
-              {provided.placeholder}
-              <div className="w-80 shrink-0">
-                <CreateColumnDialog boardId={board.id} />
-              </div>
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
+              {(provided) => {
+                const allTasks = columns.flatMap(c => c.tasks.map(t => ({ id: t.id, title: t.title })));
+                return (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="h-full flex gap-4 p-4 overflow-x-auto overflow-y-hidden min-h-0"
+                  >
+                    {columns.map((column, index) => (
+                      <ColumnView
+                        key={column.id}
+                        column={column}
+                        index={index}
+                        boardId={board.id}
+                        members={allMembers}
+                        allLabels={board.labels}
+                        boardOwnerId={board.userId}
+                        allTasks={allTasks}
+                      />
+                    ))}
+                  {provided.placeholder}
+                  <div className="w-80 shrink-0">
+                    <CreateColumnDialog boardId={board.id} />
+                  </div>
+                  </div>
+                );
+              }}
+            </Droppable>
+          </DragDropContext>
+        ) : (
+          <DependencyGraph board={board} onTaskClick={(id) => setSelectedTaskId(id)} />
+        )}
+      </div>
+
+      {selectedTask && (
+        <TaskDetailsDialog
+          task={selectedTask}
+          boardId={board.id}
+          members={allMembers}
+          open={!!selectedTaskId}
+          onOpenChange={(open) => !open && setSelectedTaskId(null)}
+          allLabels={board.labels}
+          boardOwnerId={board.userId}
+          allTasks={columns.flatMap(c => c.tasks.map(t => ({ id: t.id, title: t.title })))}
+        />
+      )}
     </div>
   );
 }

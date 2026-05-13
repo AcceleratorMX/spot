@@ -26,9 +26,12 @@ type Task = {
   }[];
   subtasks: { id: string; title: string; isDone: boolean }[];
   labels: { label: { id: string; name: string; color: string } }[];
+  dependencies: { precedingTaskId: string }[];
   order: number;
   columnId: string;
   userId: string | null;
+  graphX: number | null;
+  graphY: number | null;
 };
 
 type Member = {
@@ -47,9 +50,10 @@ type TaskCardProps = {
   members: Member[];
   allLabels: { id: string; name: string; color: string }[];
   boardOwnerId: string;
+  allTasks: { id: string; title: string }[];
 };
 
-export function TaskCard({ task, index, boardId, members, allLabels, boardOwnerId }: TaskCardProps) {
+export function TaskCard({ task, index, boardId, members, allLabels, boardOwnerId, allTasks }: TaskCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const t = useTranslations("boards");
 
@@ -134,6 +138,7 @@ export function TaskCard({ task, index, boardId, members, allLabels, boardOwnerI
         onOpenChange={setShowDetails}
         allLabels={allLabels}
         boardOwnerId={boardOwnerId}
+        allTasks={allTasks}
       />
     </>
   );

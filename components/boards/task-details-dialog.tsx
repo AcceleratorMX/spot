@@ -9,11 +9,13 @@ import {
   createSubtask,
   toggleSubtask,
   deleteSubtask,
+  addTaskDependency,
+  removeTaskDependency,
 } from "@/app/actions/tasks";
 import { addTaskLabel, removeTaskLabel } from "@/app/actions/labels";
 import { useRouter } from "next/navigation";
 import { Priority } from "@prisma/client";
-import { Plus, X, Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { Plus, X, Calendar as CalendarIcon, Loader2, Link as LinkIcon } from "lucide-react";
 import { format } from "date-fns";
 import { uk, enUS } from "date-fns/locale";
 import { useLocale } from "next-intl";
@@ -59,6 +61,7 @@ type Task = {
   participants: { userId: string }[];
   subtasks: { id: string; title: string; isDone: boolean }[];
   labels: { label: { id: string; name: string; color: string } }[];
+  dependencies: { precedingTaskId: string }[];
   userId?: string | null;
 };
 
@@ -78,6 +81,7 @@ type TaskDetailsDialogProps = {
   onOpenChange: (open: boolean) => void;
   allLabels: { id: string; name: string; color: string }[];
   boardOwnerId: string;
+  allTasks: { id: string; title: string }[];
 };
 
 export function TaskDetailsDialog({
@@ -88,6 +92,7 @@ export function TaskDetailsDialog({
   onOpenChange,
   allLabels,
   boardOwnerId,
+  allTasks,
 }: TaskDetailsDialogProps) {
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -110,7 +115,8 @@ export function TaskDetailsDialog({
   const { data: session } = useSession();
   const isCreator = session?.user?.id === task.userId;
   const isBoardOwner = session?.user?.id === boardOwnerId;
-  const canEdit = isCreator || isBoardOwner;
+  const isMember = members.some((m) => m.user.id === session?.user?.id);
+  const canEdit = isCreator || isBoardOwner || isMember;
 
   const router = useRouter();
   const locale = useLocale();
@@ -235,6 +241,26 @@ export function TaskDetailsDialog({
     setLoading(false);
     refreshActivity();
     router.refresh();
+  };
+
+  const handleAddDependency = async (precedingTaskId: string) => {
+    setLoading(true);
+    const result = await addTaskDependency(boardId, task.id, precedingTaskId);
+    setLoading(false);
+    if (!result.error) {
+      refreshActivity();
+      router.refresh();
+    }
+  };
+
+  const handleRemoveDependency = async (precedingTaskId: string) => {
+    setLoading(true);
+    const result = await removeTaskDependency(boardId, task.id, precedingTaskId);
+    setLoading(false);
+    if (!result.error) {
+      refreshActivity();
+      router.refresh();
+    }
   };
 
   return (
@@ -376,6 +402,65 @@ export function TaskDetailsDialog({
                     </Badge>
                   );
                 })}
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label className="text-xs font-bold uppercase text-muted-foreground">
+                {t("dependencies") || "Dependencies"}
+              </Label>
+              <div className="space-y-2 mt-1 bg-muted/20 p-3 rounded-lg border border-dashed border-muted-foreground/30">
+                <div className="flex flex-wrap gap-2">
+                  {task.dependencies.map((dep) => {
+                    const depTask = allTasks.find(t => t.id === dep.precedingTaskId);
+                    return (
+                      <Badge key={dep.precedingTaskId} variant="secondary" className="pl-2 pr-1 py-1 gap-1 flex items-center">
+                        <LinkIcon className="h-3 w-3 text-muted-foreground" />
+                        <span className="max-w-[150px] truncate">{depTask?.title || dep.precedingTaskId}</span>
+                        {canEdit && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4 hover:bg-destructive hover:text-destructive-foreground rounded-full"
+                            onClick={() => handleRemoveDependency(dep.precedingTaskId)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </Badge>
+                    );
+                  })}
+                  {task.dependencies.length === 0 && (
+                    <span className="text-xs text-muted-foreground italic">{t("noDependencies") || "No dependencies"}</span>
+                  )}
+                </div>
+                
+                {canEdit && (
+                  <div className="mt-3">
+                    <Select onValueChange={handleAddDependency}>
+                      <SelectTrigger id="dependency-select-trigger" className="h-8 text-xs bg-background">
+                        <Plus className="h-3.3 w-3.3 mr-2" />
+                        <SelectValue placeholder={t("addDependency") || "Add dependency..."} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allTasks
+                          .filter(t => 
+                            t.id !== task.id && 
+                            !task.dependencies.some(d => d.precedingTaskId === t.id)
+                          )
+                          .map(t => (
+                            <SelectItem key={t.id} value={t.id} className="text-xs">
+                              {t.title}
+                            </SelectItem>
+                          ))
+                        }
+                        {allTasks.length <= 1 && (
+                          <div className="p-2 text-xs text-muted-foreground italic">No other tasks available</div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
             </div>
 

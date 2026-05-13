@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Globe } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -22,12 +22,17 @@ export function LanguageSwitcher() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const switchLocale = (newLocale: string) => {
     // Replace current locale in the pathname with the new one
     const segments = pathname.split("/");
     segments[1] = newLocale;
-    router.push(segments.join("/"));
+    const newPath = segments.join("/");
+    
+    // Preserve search params
+    const params = searchParams.toString();
+    router.push(params ? `${newPath}?${params}` : newPath);
   };
 
   return (

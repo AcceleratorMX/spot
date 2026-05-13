@@ -32,7 +32,9 @@ const boardInclude = {
             include: {
               label: true
             }
-          }
+          },
+          dependencies: true,
+          dependents: true
         }
       }
     }
