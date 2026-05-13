@@ -1,3 +1,4 @@
+import { type AnchorHTMLAttributes } from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -22,6 +23,27 @@ vi.mock("next-intl", () => ({
   useLocale: () => "en",
 }));
 
+// Mock @/i18n/navigation
+vi.mock("@/i18n/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  usePathname: () => "/en/dashboard",
+  Link: ({
+    children,
+    href,
+    ...props
+  }: AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+  redirect: vi.fn(),
+}));
+
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -29,6 +51,8 @@ vi.mock("next/navigation", () => ({
     refresh: vi.fn(),
   }),
   usePathname: () => "/en/dashboard",
+  redirect: vi.fn(),
+  permanentRedirect: vi.fn(),
 }));
 
 // Mock custom theme provider
