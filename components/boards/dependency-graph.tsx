@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useMemo, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -10,7 +10,6 @@ import {
   useNodesState,
   useEdgesState,
   useReactFlow,
-  addEdge,
   type Connection,
   type NodeProps,
   type Edge,
@@ -226,9 +225,10 @@ function DependencyGraphContent({ board, onTaskClick }: DependencyGraphProps) {
   useEffect(() => {
     if (!isInitialLayoutDone && board.columns.length > 0) {
       applyLayout();
-      setIsInitialLayoutDone(true);
+      // Use setTimeout to avoid synchronous cascading render warning
+      setTimeout(() => setIsInitialLayoutDone(true), 0);
     }
-  }, [board.id, isInitialLayoutDone, applyLayout]);
+  }, [board.id, board.columns.length, isInitialLayoutDone, applyLayout]);
 
   // Handle data updates without breaking positions
   useEffect(() => {
@@ -312,7 +312,7 @@ function DependencyGraphContent({ board, onTaskClick }: DependencyGraphProps) {
   );
 
   const onNodeDragStop = useCallback(
-    async (_: any, node: Node) => {
+    async (_: React.MouseEvent, node: Node) => {
       await updateTaskPosition(node.id, board.id, node.position.x, node.position.y);
     },
     [board.id]

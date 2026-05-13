@@ -438,7 +438,7 @@ export function TaskDetailsDialog({
                 {canEdit && (
                   <div className="mt-3">
                     <Select onValueChange={handleAddDependency}>
-                      <SelectTrigger className="h-8 text-xs bg-background">
+                      <SelectTrigger id="dependency-select-trigger" className="h-8 text-xs bg-background">
                         <Plus className="h-3.3 w-3.3 mr-2" />
                         <SelectValue placeholder={t("addDependency") || "Add dependency..."} />
                       </SelectTrigger>

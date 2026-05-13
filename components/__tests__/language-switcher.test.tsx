@@ -20,6 +20,7 @@ vi.mock("next/navigation", () => ({
     push: mockPush,
   }),
   usePathname: () => "/en/dashboard",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 describe("LanguageSwitcher", () => {
