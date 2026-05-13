@@ -41,6 +41,7 @@ model User {
   boardMemberships BoardMember[]
   assignedTasks    TaskAssignee[]
   createdTasks     Task[]        @relation("CreatedTasks")
+  auditLogs        AuditLog[]
 }
 
 model Account {
@@ -173,4 +174,35 @@ model TaskAssignee {
   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([taskId, userId])
+}
+
+// ─── Audit Log models ────────────────────────────────────────
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum EntityType {
+  BOARD
+  COLUMN
+  TASK
+  SUBTASK
+  LABEL
+}
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  action      AuditAction
+  entityId    String
+  entityType  EntityType
+  entityTitle String?
+  oldData     Json?
+  newData     Json?
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+
+  @@index([entityId, entityType])
 }

@@ -63,7 +63,7 @@ export function CreateColumnDialog({ boardId }: CreateColumnDialogProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} id="create-column-submit">
               {loading ? "..." : t("addColumn")}
             </Button>
           </DialogFooter>

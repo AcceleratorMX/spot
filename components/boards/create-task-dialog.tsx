@@ -68,7 +68,7 @@ export function CreateTaskDialog({ columnId, boardId }: CreateTaskDialogProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} id="create-task-submit">
               {loading ? "..." : t("addTask")}
             </Button>
           </DialogFooter>

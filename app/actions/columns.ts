@@ -3,6 +3,8 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { AuditAction, EntityType } from "@prisma/client";
+import { createAuditLog } from "@/lib/audit";
 import { touchBoard } from "./boards";
 
 export async function createColumn(boardId: string, title: string) {
@@ -17,12 +19,20 @@ export async function createColumn(boardId: string, title: string) {
 
     const order = lastColumn ? lastColumn.order + 1 : 0;
 
-    await prisma.column.create({
+    const column = await prisma.column.create({
       data: {
         title,
         order,
         boardId,
       },
+    });
+
+    await createAuditLog({
+      entityId: column.id,
+      entityTitle: column.title,
+      entityType: EntityType.COLUMN,
+      action: AuditAction.CREATE,
+      newData: column,
     });
 
     revalidatePath(`/boards/${boardId}`);
@@ -58,9 +68,17 @@ export async function renameColumn(id: string, title: string, boardId: string) {
   if (!session?.user?.id) return { error: "Unauthorized" };
 
   try {
-    await prisma.column.update({
+    const column = await prisma.column.update({
       where: { id },
       data: { title }
+    });
+
+    await createAuditLog({
+      entityId: column.id,
+      entityTitle: column.title,
+      entityType: EntityType.COLUMN,
+      action: AuditAction.UPDATE,
+      newData: { title }
     });
 
     await touchBoard(boardId);
@@ -102,8 +120,16 @@ export async function deleteColumn(id: string, boardId: string) {
       }
       
       // Delete the column
-      await tx.column.delete({
+      const deletedColumn = await tx.column.delete({
         where: { id }
+      });
+
+      await createAuditLog({
+        entityId: deletedColumn.id,
+        entityTitle: deletedColumn.title,
+        entityType: EntityType.COLUMN,
+        action: AuditAction.DELETE,
+        oldData: deletedColumn,
       });
     });
 
