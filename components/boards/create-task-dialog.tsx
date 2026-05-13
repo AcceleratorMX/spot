@@ -28,15 +28,10 @@ export function CreateTaskDialog({ columnId, boardId }: CreateTaskDialogProps) {
   const [loading, setLoading] = useState(false);
   const t = useTranslations("boards");
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleAction(formData: FormData) {
     setLoading(true);
-
-    const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
-    
     await createTask(columnId, title, boardId);
-    
     setOpen(false);
     setLoading(false);
   }
@@ -58,7 +53,7 @@ export function CreateTaskDialog({ columnId, boardId }: CreateTaskDialogProps) {
           <DialogTitle>{t("addTask")}</DialogTitle>
           <DialogDescription>{t("addTaskDesc")}</DialogDescription>
         </DialogHeader>
-        <form onSubmit={onSubmit}>
+        <form action={handleAction}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="title">{t("taskTitle")}</Label>

@@ -25,10 +25,38 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased bg-background text-foreground`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('spot-theme');
+                  var isDark = theme === 'dark' || ((!theme || theme === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                  
+                  // Block transitions
+                  var css = document.createElement('style');
+                  css.appendChild(document.createTextNode('* { transition: none !important; }'));
+                  document.head.appendChild(css);
+                  
+                  document.documentElement.classList.toggle('dark', isDark);
+                  
+                  // Unblock transitions after paint
+                  setTimeout(function() {
+                    document.head.removeChild(css);
+                  }, 10);
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

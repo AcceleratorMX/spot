@@ -28,14 +28,11 @@ export function InviteMemberDialog({ boardId }: InviteMemberDialogProps) {
   const [error, setError] = useState<string | null>(null);
   const t = useTranslations("boards");
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleAction(formData: FormData) {
     setLoading(true);
     setError(null);
 
-    const formData = new FormData(event.currentTarget);
     const email = formData.get("email") as string;
-    
     const result = await inviteMember(boardId, email);
 
     if (result.error) {
@@ -56,7 +53,7 @@ export function InviteMemberDialog({ boardId }: InviteMemberDialogProps) {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
-        <form onSubmit={onSubmit}>
+        <form action={handleAction}>
           <DialogHeader>
             <DialogTitle>{t("inviteMember")}</DialogTitle>
             <DialogDescription>

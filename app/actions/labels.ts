@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { touchBoard } from "./boards";
 
 export async function createLabel(boardId: string, name: string, color: string) {
   const session = await auth();
@@ -33,6 +34,7 @@ export async function deleteLabel(id: string, boardId: string) {
       where: { id }
     });
 
+    await touchBoard(boardId);
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
   } catch {

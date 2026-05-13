@@ -8,6 +8,7 @@ import { Prisma } from "@prisma/client";
 
 const boardInclude = {
   include: {
+    user: true,
     members: {
       include: {
         user: true
@@ -42,6 +43,7 @@ const boardInclude = {
 
 const boardSummaryInclude = {
   include: {
+    user: true,
     members: {
       include: {
         user: true
@@ -177,7 +179,18 @@ export async function getBoardById(id: string): Promise<BoardWithRelations | nul
     ...boardInclude
   });
 
-  return board;
+  return board as BoardWithRelations | null;
+}
+
+export async function touchBoard(boardId: string) {
+  try {
+    await prisma.board.update({
+      where: { id: boardId },
+      data: { updatedAt: new Date() }
+    });
+  } catch (error) {
+    console.error("Failed to touch board:", error);
+  }
 }
 
 export async function inviteMember(boardId: string, email: string) {

@@ -27,15 +27,10 @@ export function CreateColumnDialog({ boardId }: CreateColumnDialogProps) {
   const [loading, setLoading] = useState(false);
   const t = useTranslations("boards");
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleAction(formData: FormData) {
     setLoading(true);
-
-    const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
-    
     await createColumn(boardId, title);
-    
     setOpen(false);
     setLoading(false);
   }
@@ -53,7 +48,7 @@ export function CreateColumnDialog({ boardId }: CreateColumnDialogProps) {
           <DialogTitle>{t("addColumn")}</DialogTitle>
           <DialogDescription className="sr-only">{t("addColumnDesc")}</DialogDescription>
         </DialogHeader>
-        <form onSubmit={onSubmit}>
+        <form action={handleAction}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="title">{t("columnTitle")}</Label>

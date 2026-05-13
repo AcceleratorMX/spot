@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { updateTask, deleteTask, createSubtask, toggleSubtask, deleteSubtask } from "@/app/actions/tasks";
 import { addTaskLabel, removeTaskLabel } from "@/app/actions/labels";
 import { useRouter } from "next/navigation";
 import { Priority } from "@prisma/client";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Calendar as CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { uk, enUS } from "date-fns/locale";
+import { useLocale } from "next-intl";
 
 import {
   Dialog,
@@ -31,6 +35,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 type Task = {
   id: string;
@@ -41,6 +52,7 @@ type Task = {
   participants: { userId: string }[];
   subtasks: { id: string; title: string; isDone: boolean }[];
   labels: { label: { id: string; name: string; color: string } }[];
+  userId?: string | null;
 };
 
 type Member = {
@@ -58,6 +70,7 @@ type TaskDetailsDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   allLabels: { id: string; name: string; color: string }[];
+  boardOwnerId: string;
 };
 
 export function TaskDetailsDialog({
@@ -67,6 +80,7 @@ export function TaskDetailsDialog({
   open,
   onOpenChange,
   allLabels,
+  boardOwnerId,
 }: TaskDetailsDialogProps) {
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -76,8 +90,16 @@ export function TaskDetailsDialog({
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || "");
   const [priority, setPriority] = useState<Priority>(task.priority);
-  const [dueDate, setDueDate] = useState(task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "");
+  const [dueDate, setDueDate] = useState<Date | undefined>(
+    task.dueDate ? new Date(task.dueDate) : undefined
+  );
+  const { data: session } = useSession();
+  const isCreator = session?.user?.id === task.userId;
+  const isBoardOwner = session?.user?.id === boardOwnerId;
+  const canEdit = isCreator || isBoardOwner;
   const router = useRouter();
+  const locale = useLocale();
+  const dateLocale = locale === "uk" ? uk : enUS;
 
   const [prevTask, setPrevTask] = useState(task);
 
@@ -86,20 +108,19 @@ export function TaskDetailsDialog({
     setTitle(task.title);
     setDescription(task.description || "");
     setPriority(task.priority);
-    setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "");
+    setDueDate(task.dueDate ? new Date(task.dueDate) : undefined);
     setPrevTask(task);
   }
   const t = useTranslations("boards");
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleAction() {
     setLoading(true);
 
     await updateTask(task.id, boardId, {
       title,
       description,
       priority,
-      dueDate: dueDate ? new Date(dueDate) : null,
+      dueDate: dueDate || null,
       assigneeUserIds: selectedAssignees,
     });
 
@@ -162,7 +183,7 @@ export function TaskDetailsDialog({
               {t("addTaskDesc")}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={onSubmit}>
+          <form action={handleAction}>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="title">{t("taskTitle")}</Label>
@@ -171,6 +192,7 @@ export function TaskDetailsDialog({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
+                  disabled={!canEdit}
                 />
               </div>
               <div className="grid gap-2">
@@ -180,6 +202,7 @@ export function TaskDetailsDialog({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder={t("descPlaceholder")}
+                  disabled={!canEdit}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -189,6 +212,7 @@ export function TaskDetailsDialog({
                     name="priority"
                     value={priority}
                     onValueChange={(value: Priority) => setPriority(value)}
+                    disabled={!canEdit}
                   >
                     <SelectTrigger id="priority">
                       <SelectValue placeholder="Select priority" />
@@ -203,13 +227,34 @@ export function TaskDetailsDialog({
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="dueDate">{t("dueDate")}</Label>
-                  <Input
-                    id="dueDate"
-                    name="dueDate"
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !dueDate && "text-muted-foreground"
+                        )}
+                        disabled={!canEdit}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dueDate ? (
+                          format(dueDate, "PPP", { locale: dateLocale })
+                        ) : (
+                          <span>{t("pickDate")}</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dueDate}
+                        onSelect={setDueDate}
+                        locale={dateLocale}
+                        disabled={{ before: new Date() }}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
               <div className="grid gap-2">
@@ -221,6 +266,7 @@ export function TaskDetailsDialog({
                         id={`user-${member.user.id}`}
                         checked={selectedAssignees.includes(member.user.id)}
                         onCheckedChange={() => toggleAssignee(member.user.id)}
+                        disabled={!canEdit}
                       />
                       <Label
                         htmlFor={`user-${member.user.id}`}
@@ -248,7 +294,7 @@ export function TaskDetailsDialog({
                           borderColor: label.color,
                           color: isSelected ? "white" : "inherit",
                         }}
-                        onClick={() => handleToggleLabel(label.id)}
+                        onClick={() => canEdit && handleToggleLabel(label.id)}
                       >
                         {label.name}
                       </Badge>
@@ -311,26 +357,28 @@ export function TaskDetailsDialog({
                 </div>
               </div>
             </div>
-            <DialogFooter className="flex items-center justify-between">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="text-destructive"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={loading}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-              <div className="flex gap-2">
-                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-                  Cancel
+            {canEdit && (
+              <DialogFooter className="flex items-center justify-between">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={loading}
+                >
+                  <Trash2 className="h-4 w-4" />
                 </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "..." : "Save changes"}
-                </Button>
-              </div>
-            </DialogFooter>
+                <div className="flex gap-2">
+                  <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? "..." : "Save changes"}
+                  </Button>
+                </div>
+              </DialogFooter>
+            )}
           </form>
         </DialogContent>
       </Dialog>

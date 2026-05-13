@@ -29,6 +29,7 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [mounted, setMounted] = useState(false);
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window === "undefined") return "system";
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -38,10 +39,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       : "system";
   });
 
-  // Apply theme class to document on mount and theme change
   useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
+    setMounted(true);
+  }, []);
+
+  // Apply theme class to document only after mount and on theme change
+  useEffect(() => {
+    if (mounted) {
+      applyTheme(theme);
+    }
+  }, [theme, mounted]);
 
   useEffect(() => {
     const mql = window.matchMedia("(prefers-color-scheme: dark)");

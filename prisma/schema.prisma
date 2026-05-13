@@ -40,6 +40,7 @@ model User {
   boards           Board[]       @relation("CreatedBoards")
   boardMemberships BoardMember[]
   assignedTasks    TaskAssignee[]
+  createdTasks     Task[]        @relation("CreatedTasks")
 }
 
 model Account {
@@ -124,6 +125,8 @@ model Task {
   order          Int       @default(0)
   columnId       String
   column         Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  userId         String?
+  creator        User?     @relation("CreatedTasks", fields: [userId], references: [id], onDelete: Cascade)
   participants   TaskAssignee[]
   subtasks       Subtask[]
   labels         TaskLabel[]

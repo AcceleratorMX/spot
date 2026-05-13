@@ -27,12 +27,10 @@ export function CreateBoardDialog() {
   const t = useTranslations("boards");
   const router = useRouter();
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleAction(formData: FormData) {
     setLoading(true);
     setError(null);
 
-    const formData = new FormData(event.currentTarget);
     const result = await createBoard(formData);
 
     if (result.error) {
@@ -58,7 +56,7 @@ export function CreateBoardDialog() {
           <DialogTitle>{t("newBoard")}</DialogTitle>
           <DialogDescription>{t("subtitle")}</DialogDescription>
         </DialogHeader>
-        <form onSubmit={onSubmit}>
+        <form action={handleAction}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="title">{t("boardTitle")}</Label>

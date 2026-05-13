@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Priority } from "@prisma/client";
+import { touchBoard } from "./boards";
 
 export async function createTask(columnId: string, title: string, boardId: string) {
   const session = await auth();
@@ -22,6 +23,7 @@ export async function createTask(columnId: string, title: string, boardId: strin
         title,
         order,
         columnId,
+        userId: session.user.id,
       },
     });
 
@@ -115,6 +117,7 @@ export async function updateTaskOrder(
     );
 
     await prisma.$transaction(prismaUpdates);
+    await touchBoard(boardId);
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
   } catch {
@@ -151,6 +154,7 @@ export async function toggleSubtask(id: string, isDone: boolean, boardId: string
       data: { isDone }
     });
 
+    await touchBoard(boardId);
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
   } catch {

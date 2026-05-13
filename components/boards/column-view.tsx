@@ -50,9 +50,10 @@ type ColumnViewProps = {
   boardId: string;
   members: Member[];
   allLabels: { id: string; name: string; color: string }[];
+  boardOwnerId: string;
 };
 
-export function ColumnView({ column, index, boardId, members, allLabels }: ColumnViewProps) {
+export function ColumnView({ column, index, boardId, members, allLabels, boardOwnerId }: ColumnViewProps) {
   return (
     <Draggable draggableId={column.id} index={index}>
       {(provided) => (
@@ -97,6 +98,7 @@ export function ColumnView({ column, index, boardId, members, allLabels }: Colum
                           boardId={boardId}
                           members={members}
                           allLabels={allLabels}
+                          boardOwnerId={boardOwnerId}
                         />
                       ))}
                     </div>

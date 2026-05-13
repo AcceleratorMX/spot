@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { touchBoard } from "./boards";
 
 export async function createColumn(boardId: string, title: string) {
   const session = await auth();
@@ -44,6 +45,7 @@ export async function updateColumnOrder(boardId: string, columnIds: string[]) {
     );
 
     await prisma.$transaction(updates);
+    await touchBoard(boardId);
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
   } catch {
@@ -61,6 +63,7 @@ export async function renameColumn(id: string, title: string, boardId: string) {
       data: { title }
     });
 
+    await touchBoard(boardId);
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
   } catch {
@@ -104,6 +107,7 @@ export async function deleteColumn(id: string, boardId: string) {
       });
     });
 
+    await touchBoard(boardId);
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
   } catch (error) {

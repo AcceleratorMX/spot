@@ -25,6 +25,7 @@ type BoardSettingsDialogProps = {
     id: string;
     title: string;
     description: string | null;
+    userId: string;
     labels: { id: string; name: string; color: string }[];
   };
   open?: boolean;
@@ -45,10 +46,8 @@ export function BoardSettingsDialog({
   const [newLabelColor, setNewLabelColor] = useState("#3b82f6");
   const t = useTranslations("boards");
 
-  const handleUpdateBoard = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleUpdateBoard = async (formData: FormData) => {
     setLoading(true);
-    const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     
@@ -89,7 +88,7 @@ export function BoardSettingsDialog({
         </DialogHeader>
         
         <div className="space-y-6 py-4">
-          <form onSubmit={handleUpdateBoard} className="space-y-4">
+          <form action={handleUpdateBoard} className="space-y-4">
             <div className="grid gap-2">
               <Label htmlFor="title">{t("boardTitle")}</Label>
               <Input

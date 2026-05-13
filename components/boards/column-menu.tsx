@@ -34,10 +34,8 @@ export function ColumnMenu({ columnId, columnTitle, boardId }: ColumnMenuProps) 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleRename = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleRename = async (formData: FormData) => {
     setLoading(true);
-    const formData = new FormData(event.currentTarget);
     const title = formData.get("title") as string;
     await renameColumn(columnId, title, boardId);
     setLoading(false);
@@ -77,7 +75,7 @@ export function ColumnMenu({ columnId, columnTitle, boardId }: ColumnMenuProps) 
       {/* Rename Dialog */}
       <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
         <DialogContent>
-          <form onSubmit={handleRename}>
+          <form action={handleRename}>
             <DialogHeader>
               <DialogTitle>Rename Column</DialogTitle>
               <DialogDescription className="sr-only">

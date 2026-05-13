@@ -28,6 +28,7 @@ type Task = {
   labels: { label: { id: string; name: string; color: string } }[];
   order: number;
   columnId: string;
+  userId?: string | null;
 };
 
 type Member = {
@@ -45,9 +46,10 @@ type TaskCardProps = {
   boardId: string;
   members: Member[];
   allLabels: { id: string; name: string; color: string }[];
+  boardOwnerId: string;
 };
 
-export function TaskCard({ task, index, boardId, members, allLabels }: TaskCardProps) {
+export function TaskCard({ task, index, boardId, members, allLabels, boardOwnerId }: TaskCardProps) {
   const [showDetails, setShowDetails] = useState(false);
   const t = useTranslations("boards");
 
@@ -131,6 +133,7 @@ export function TaskCard({ task, index, boardId, members, allLabels }: TaskCardP
         open={showDetails}
         onOpenChange={setShowDetails}
         allLabels={allLabels}
+        boardOwnerId={boardOwnerId}
       />
     </>
   );

@@ -99,6 +99,9 @@
     "low": "Low",
     "medium": "Medium",
     "high": "High",
-    "urgent": "Urgent"
+    "urgent": "Urgent",
+    "pickDate": "Pick a date",
+    "noDate": "No date",
+    "deleteBoard": "Delete Board"
   }
 }
