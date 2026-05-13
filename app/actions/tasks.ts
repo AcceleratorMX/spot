@@ -268,3 +268,108 @@ export async function deleteSubtask(id: string, boardId: string) {
     return { error: "Failed to delete subtask" };
   }
 }
+
+export async function addTaskDependency(
+  boardId: string,
+  dependentTaskId: string,
+  precedingTaskId: string
+) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  if (dependentTaskId === precedingTaskId) {
+    return { error: "A task cannot depend on itself" };
+  }
+
+  try {
+    // Simple check if it already exists
+    const existing = await prisma.taskDependency.findUnique({
+      where: {
+        dependentTaskId_precedingTaskId: {
+          dependentTaskId,
+          precedingTaskId,
+        },
+      },
+    });
+
+    if (existing) return { success: true };
+
+    await prisma.taskDependency.create({
+      data: {
+        dependentTaskId,
+        precedingTaskId,
+      },
+    });
+
+    await createAuditLog({
+      entityId: dependentTaskId,
+      entityType: EntityType.DEPENDENCY,
+      action: AuditAction.CREATE,
+      newData: { precedingTaskId },
+    });
+
+    revalidatePath(`/boards/${boardId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to add dependency:", error);
+    return { error: "Failed to add dependency" };
+  }
+}
+
+export async function removeTaskDependency(
+  boardId: string,
+  dependentTaskId: string,
+  precedingTaskId: string
+) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  try {
+    const dependency = await prisma.taskDependency.delete({
+      where: {
+        dependentTaskId_precedingTaskId: {
+          dependentTaskId,
+          precedingTaskId,
+        },
+      },
+    });
+
+    await createAuditLog({
+      entityId: dependency.dependentTaskId,
+      entityTitle: `Dependency on ${precedingTaskId} removed`,
+      entityType: EntityType.DEPENDENCY,
+      action: AuditAction.DELETE,
+    });
+
+    await touchBoard(boardId);
+    revalidatePath(`/boards/${boardId}`);
+    return { success: true };
+  } catch {
+    return { error: "Failed to remove dependency" };
+  }
+}
+
+export async function updateTaskPosition(
+  taskId: string,
+  boardId: string,
+  x: number,
+  y: number
+) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  try {
+    await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        graphX: x,
+        graphY: y,
+      },
+    });
+
+    // No revalidatePath here to avoid flickering while dragging
+    return { success: true };
+  } catch {
+    return { error: "Failed to update position" };
+  }
+}

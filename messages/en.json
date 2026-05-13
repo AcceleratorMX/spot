@@ -118,6 +118,10 @@
     "assigneesUpdated": "Assignees updated",
     "subtaskAdded": "Subtask added",
     "subtaskRemoved": "Subtask removed",
-    "subtaskToggled": "Subtask toggled"
+    "subtaskToggled": "Subtask toggled",
+    "dependencies": "Dependencies",
+    "addDependency": "Add dependency...",
+    "noDependencies": "No dependencies",
+    "dependency": "dependency"
   }
 }

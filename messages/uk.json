@@ -118,6 +118,10 @@
     "assigneesUpdated": "Виконавців оновлено",
     "subtaskAdded": "Підзавдання додано",
     "subtaskRemoved": "Підзавдання видалено",
-    "subtaskToggled": "Статус підзавдання змінено"
+    "subtaskToggled": "Статус підзавдання змінено",
+    "dependencies": "Залежності",
+    "addDependency": "Додати залежність...",
+    "noDependencies": "Немає залежностей",
+    "dependency": "залежність"
   }
 }
