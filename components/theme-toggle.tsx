@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon, Sun, Monitor } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { useTranslations } from "next-intl";
 
@@ -33,10 +33,6 @@ export function ThemeToggle() {
         <DropdownMenuItem onClick={() => setTheme("dark")} id="theme-dark">
           <Moon className="mr-2 h-4 w-4" />
           <span>{t("dark")}</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")} id="theme-system">
-          <Monitor className="mr-2 h-4 w-4" />
-          <span>{t("system")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
