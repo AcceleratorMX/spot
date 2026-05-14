@@ -47,7 +47,7 @@ export default function SignInPage() {
         </div>
         <CardTitle className="text-2xl font-bold">{tNav("signIn")}</CardTitle>
         <CardDescription>
-          Enter your credentials to access your workspace
+          {t("signInDescription")}
         </CardDescription>
       </CardHeader>
       <form action={formAction}>
@@ -61,7 +61,7 @@ export default function SignInPage() {
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("email")}</Label>
             <Input
               id="email"
               name="email"
@@ -73,7 +73,7 @@ export default function SignInPage() {
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("password")}</Label>
               <Link
                 href={`/${locale}/forgot-password`}
                 className="text-xs text-primary hover:underline"
@@ -99,11 +99,11 @@ export default function SignInPage() {
           >
             {isPending ? "..." : tNav("signIn")}
           </Button>
-
+ 
           <SocialButtons />
-
+ 
           <p className="text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
+            {t("noAccount")}{" "}
             <Link
               href={`/${locale}/sign-up`}
               className="font-medium text-primary underline-offset-4 hover:underline"

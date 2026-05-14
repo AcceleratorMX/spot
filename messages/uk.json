@@ -32,7 +32,16 @@
     "confirmPassword": "Підтвердіть пароль",
     "socialLogin": "Або продовжити через",
     "resetEmailSent": "Лист надіслано. Будь ласка, перевірте пошту.",
-    "passwordResetSuccess": "Пароль успішно змінено. Тепер ви можете увійти."
+    "passwordResetSuccess": "Пароль успішно змінено. Тепер ви можете увійти.",
+    "signInDescription": "Введіть свої дані, щоб отримати доступ до робочого простору",
+    "signUpDescription": "Створіть акаунт, щоб почати керувати своїми проєктами",
+    "email": "Email",
+    "password": "Пароль",
+    "name": "Ім'я",
+    "noAccount": "Немає акаунта?",
+    "alreadyHaveAccount": "Вже маєте акаунт?",
+    "forgotPasswordDescription": "Введіть свій email, і ми надішлемо вам посилання для скидання пароля",
+    "newPasswordDescription": "Введіть новий пароль нижче"
   },
   "nav": {
     "dashboard": "Панель",

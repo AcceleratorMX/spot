@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-2xl font-bold">{t("forgotPassword")}</CardTitle>
         <CardDescription>
-          Enter your email and we will send you a link to reset your password
+          {t("forgotPasswordDescription")}
         </CardDescription>
       </CardHeader>
       <form action={formAction}>
@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("email")}</Label>
             <Input
               id="email"
               name="email"

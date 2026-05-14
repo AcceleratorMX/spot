@@ -32,7 +32,16 @@
     "confirmPassword": "Confirm Password",
     "socialLogin": "Or continue with",
     "resetEmailSent": "Reset email sent. Please check your inbox.",
-    "passwordResetSuccess": "Password reset successfully. You can now sign in."
+    "passwordResetSuccess": "Password reset successfully. You can now sign in.",
+    "signInDescription": "Enter your credentials to access your workspace",
+    "signUpDescription": "Create an account to start managing your projects",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "noAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "forgotPasswordDescription": "Enter your email and we will send you a link to reset your password",
+    "newPasswordDescription": "Enter your new password below"
   },
   "nav": {
     "dashboard": "Dashboard",

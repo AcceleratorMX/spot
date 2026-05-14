@@ -45,7 +45,7 @@ export default function SignUpPage() {
         </div>
         <CardTitle className="text-2xl font-bold">{tNav("signUp")}</CardTitle>
         <CardDescription>
-          Create an account to start managing your projects
+          {t("signUpDescription")}
         </CardDescription>
       </CardHeader>
       <form action={formAction}>
@@ -56,7 +56,7 @@ export default function SignUpPage() {
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">{t("name")}</Label>
             <Input
               id="name"
               name="name"
@@ -67,7 +67,7 @@ export default function SignUpPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("email")}</Label>
             <Input
               id="email"
               name="email"
@@ -78,7 +78,7 @@ export default function SignUpPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("password")}</Label>
             <Input
               id="password"
               name="password"
@@ -99,7 +99,7 @@ export default function SignUpPage() {
             {isPending ? "..." : tNav("signUp")}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
+            {t("alreadyHaveAccount")}{" "}
             <Link
               href={`/${locale}/sign-in`}
               className="font-medium text-primary underline-offset-4 hover:underline"

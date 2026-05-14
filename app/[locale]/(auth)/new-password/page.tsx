@@ -45,7 +45,7 @@ export default function NewPasswordPage() {
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-2xl font-bold">{t("resetPassword")}</CardTitle>
         <CardDescription>
-          Enter your new password below
+          {t("newPasswordDescription")}
         </CardDescription>
       </CardHeader>
       <form action={formAction}>
