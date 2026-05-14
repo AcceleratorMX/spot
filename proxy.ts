@@ -8,7 +8,7 @@ const { auth } = NextAuth(authConfig);
 
 const intlMiddleware = createIntlMiddleware(routing);
 
-const publicPages = ["/", "/sign-in", "/sign-up"];
+const publicPages = ["/", "/sign-in", "/sign-up", "/forgot-password", "/new-password"];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;

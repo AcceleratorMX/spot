@@ -1,20 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { signUp, signIn } from "../auth";
+import { signUp, signIn, forgotPassword, resetPassword } from "../auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { signIn as nextAuthSignIn } from "@/auth";
 import { AuthError } from "next-auth";
+import { generatePasswordResetToken, getPasswordResetTokenByToken } from "@/lib/tokens";
+import { sendPasswordResetEmail } from "@/lib/mail";
 
 // Mock dependencies
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
-    user: {
-      findUnique: vi.fn(),
-      create: vi.fn(),
-    },
-  },
-}));
-
 vi.mock("bcryptjs", () => ({
   default: {
     hash: vi.fn(),
@@ -24,6 +17,35 @@ vi.mock("bcryptjs", () => ({
 
 vi.mock("@/auth", () => ({
   signIn: vi.fn(),
+}));
+
+vi.mock("@/lib/tokens", () => ({
+  generatePasswordResetToken: vi.fn(),
+  getPasswordResetTokenByToken: vi.fn(),
+}));
+
+vi.mock("@/lib/mail", () => ({
+  sendPasswordResetEmail: vi.fn(),
+}));
+
+vi.mock("next-intl/server", () => ({
+  getLocale: vi.fn(() => Promise.resolve("en")),
+}));
+
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    user: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    verificationToken: {
+      findFirst: vi.fn(),
+      delete: vi.fn(),
+      create: vi.fn(),
+    },
+    $transaction: vi.fn((cb) => cb),
+  },
 }));
 
 describe("Auth Server Actions", () => {
@@ -138,6 +160,131 @@ describe("Auth Server Actions", () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("invalidCredentials");
+    });
+  });
+
+  describe("forgotPassword", () => {
+    it("should return validation error for invalid email", async () => {
+      const formData = new FormData();
+      formData.set("email", "invalid");
+
+      const result = await forgotPassword(null, formData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("invalidEmail");
+    });
+
+    it("should return success even if user not found", async () => {
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
+
+      const formData = new FormData();
+      formData.set("email", "nonexistent@test.com");
+
+      const result = await forgotPassword(null, formData);
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should send email and return success for valid user", async () => {
+      const user = {
+        id: "1",
+        email: "test@test.com",
+        passwordHash: "hash",
+      };
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(user as any);
+      vi.mocked(generatePasswordResetToken).mockResolvedValueOnce({
+        identifier: "test@test.com",
+        token: "token123",
+        expires: new Date(),
+      } as any);
+
+      const formData = new FormData();
+      formData.set("email", "test@test.com");
+
+      const result = await forgotPassword(null, formData);
+
+      expect(generatePasswordResetToken).toHaveBeenCalledWith("test@test.com");
+      expect(sendPasswordResetEmail).toHaveBeenCalledWith("test@test.com", "token123", "en");
+      expect(result.success).toBe(true);
+    });
+
+    it("should return error if user is social-only", async () => {
+      const user = {
+        id: "1",
+        email: "test@test.com",
+        passwordHash: null,
+      };
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(user as any);
+
+      const formData = new FormData();
+      formData.set("email", "test@test.com");
+
+      const result = await forgotPassword(null, formData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("socialUser");
+    });
+  });
+
+  describe("resetPassword", () => {
+    it("should return error if token is missing", async () => {
+      const formData = new FormData();
+      const result = await resetPassword(null, null, formData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("missingToken");
+    });
+
+    it("should return validation error if passwords do not match", async () => {
+      const formData = new FormData();
+      formData.set("password", "password123");
+      formData.set("confirmPassword", "different");
+
+      const result = await resetPassword("token", null, formData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("passwordsDoNotMatch");
+    });
+
+    it("should reset password and return success", async () => {
+      const token = {
+        identifier: "test@test.com",
+        token: "token123",
+        expires: new Date(Date.now() + 100000),
+      };
+      vi.mocked(getPasswordResetTokenByToken).mockResolvedValueOnce(token as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
+        id: "1",
+        email: "test@test.com",
+      } as any);
+      vi.mocked(bcrypt.hash).mockResolvedValueOnce("new_hash" as never);
+
+      const formData = new FormData();
+      formData.set("password", "newpassword123");
+      formData.set("confirmPassword", "newpassword123");
+
+      const result = await resetPassword("token123", null, formData);
+
+      expect(prisma.user.update).toHaveBeenCalled();
+      expect(result.success).toBe(true);
+    });
+
+    it("should return error if token is expired", async () => {
+      const token = {
+        identifier: "test@test.com",
+        token: "token123",
+        expires: new Date(Date.now() - 100000),
+      };
+      vi.mocked(getPasswordResetTokenByToken).mockResolvedValueOnce(token as any);
+
+      const formData = new FormData();
+      formData.set("password", "newpassword123");
+      formData.set("confirmPassword", "newpassword123");
+
+      const result = await resetPassword("token123", null, formData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("tokenExpired");
     });
   });
 });

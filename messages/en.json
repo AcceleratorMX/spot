@@ -17,8 +17,22 @@
       "passwordRequired": "Password is required",
       "invalidData": "Invalid data provided",
       "invalidCredentials": "Invalid email or password",
-      "userExists": "User with this email already exists"
-    }
+      "userExists": "User with this email already exists",
+      "socialUser": "This email is associated with a social account",
+      "invalidToken": "Invalid or expired token",
+      "tokenExpired": "Token has expired",
+      "missingToken": "Missing token",
+      "passwordsDoNotMatch": "Passwords do not match"
+    },
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "sendResetLink": "Send Reset Link",
+    "backToSignIn": "Back to Sign In",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "socialLogin": "Or continue with",
+    "resetEmailSent": "Reset email sent. Please check your inbox.",
+    "passwordResetSuccess": "Password reset successfully. You can now sign in."
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -115,9 +129,6 @@
     "title": "Title",
     "kanban": "Kanban",
     "graph": "Graph",
-    "low": "Low",
-    "medium": "Medium",
-    "high": "High",
     "labelAdded": "Label added",
     "labelRemoved": "Label removed",
     "assigneesUpdated": "Assignees updated",

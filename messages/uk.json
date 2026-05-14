@@ -17,8 +17,22 @@
       "passwordRequired": "Пароль обов'язковий",
       "invalidData": "Надані невірні дані",
       "invalidCredentials": "Невірний email або пароль",
-      "userExists": "Користувач з таким email вже існує"
-    }
+      "userExists": "Користувач з таким email вже існує",
+      "socialUser": "Цей email пов'язаний з соціальним профілем",
+      "invalidToken": "Невірний або прострочений токен",
+      "tokenExpired": "Термін дії токена закінчився",
+      "missingToken": "Відсутній токен",
+      "passwordsDoNotMatch": "Паролі не збігаються"
+    },
+    "forgotPassword": "Забули пароль?",
+    "resetPassword": "Скинути пароль",
+    "sendResetLink": "Надіслати посилання",
+    "backToSignIn": "Назад до входу",
+    "newPassword": "Новий пароль",
+    "confirmPassword": "Підтвердіть пароль",
+    "socialLogin": "Або продовжити через",
+    "resetEmailSent": "Лист надіслано. Будь ласка, перевірте пошту.",
+    "passwordResetSuccess": "Пароль успішно змінено. Тепер ви можете увійти."
   },
   "nav": {
     "dashboard": "Панель",
@@ -115,9 +129,6 @@
     "title": "Назва",
     "kanban": "Канбан",
     "graph": "Граф",
-    "low": "Низький",
-    "medium": "Середній",
-    "high": "Високий",
     "labelAdded": "Мітку додано",
     "labelRemoved": "Мітку видалено",
     "assigneesUpdated": "Виконавців оновлено",

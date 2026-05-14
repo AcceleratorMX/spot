@@ -19,6 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { SocialButtons } from "@/components/social-buttons";
 
 export default function SignInPage() {
   const t = useTranslations("auth");
@@ -46,14 +47,16 @@ export default function SignInPage() {
         </div>
         <CardTitle className="text-2xl font-bold">{tNav("signIn")}</CardTitle>
         <CardDescription>
-          {t("errors.invalidData") ? "" : ""}
           Enter your credentials to access your workspace
         </CardDescription>
       </CardHeader>
       <form action={formAction}>
         <CardContent className="space-y-4">
           {state?.error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive" id="sign-in-error">
+            <div
+              className="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
+              id="sign-in-error"
+            >
               {t(`errors.${state.error}`)}
             </div>
           )}
@@ -69,7 +72,15 @@ export default function SignInPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <Link
+                href={`/${locale}/forgot-password`}
+                className="text-xs text-primary hover:underline"
+              >
+                {t("forgotPassword")}
+              </Link>
+            </div>
             <Input
               id="password"
               name="password"
@@ -88,6 +99,9 @@ export default function SignInPage() {
           >
             {isPending ? "..." : tNav("signIn")}
           </Button>
+
+          <SocialButtons />
+
           <p className="text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
             <Link
