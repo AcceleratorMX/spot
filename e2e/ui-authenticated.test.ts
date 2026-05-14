@@ -11,6 +11,7 @@ async function registerAndSignIn(page: Page, locale = "en") {
   await page.locator("#name").fill("E2E Tester");
   await page.locator("#email").fill(email);
   await page.locator("#password").fill(password);
+  await page.locator("#confirmPassword").fill(password);
   await page.locator("#sign-up-submit").click();
 
   // Wait for redirect to sign-in

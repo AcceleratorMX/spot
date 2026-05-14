@@ -7,7 +7,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { resetPassword } from "@/app/actions/auth";
 import type { AuthActionResult } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -17,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export default function NewPasswordPage() {
   const t = useTranslations("auth");
@@ -67,20 +67,18 @@ export default function NewPasswordPage() {
           )}
           <div className="space-y-2">
             <Label htmlFor="password">{t("newPassword")}</Label>
-            <Input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               required
               disabled={!token || !!state?.success}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">{t("confirmPassword")}</Label>
-            <Input
+            <PasswordInput
               id="confirmPassword"
               name="confirmPassword"
-              type="password"
               required
               disabled={!token || !!state?.success}
             />

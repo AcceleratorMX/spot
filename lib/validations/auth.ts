@@ -1,13 +1,16 @@
 import { z } from "zod";
 
-export const signUpSchema = z.object({
-  name: z.string().min(2, "nameTooShort").max(64, "nameTooLong"),
-  email: z.email({ message: "invalidEmail" }),
-  password: z
-    .string()
-    .min(8, "passwordTooShort")
-    .max(128, "passwordTooLong"),
-});
+export const signUpSchema = z
+  .object({
+    name: z.string().min(2, "nameTooShort").max(64, "nameTooLong"),
+    email: z.email({ message: "invalidEmail" }),
+    password: z.string().min(8, "passwordTooShort").max(128, "passwordTooLong"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "passwordsDoNotMatch",
+    path: ["confirmPassword"],
+  });
 
 export const signInSchema = z.object({
   email: z.email({ message: "invalidEmail" }),

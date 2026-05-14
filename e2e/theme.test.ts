@@ -10,6 +10,7 @@ async function registerAndSignIn(page: Page) {
   await page.locator("#name").fill("Theme Tester");
   await page.locator("#email").fill(email);
   await page.locator("#password").fill(password);
+  await page.locator("#confirmPassword").fill(password);
   await page.locator("#sign-up-submit").click();
   await page.waitForURL("**/en/sign-in");
 

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { User, VerificationToken } from "@prisma/client";
 import { signUp, signIn, forgotPassword, resetPassword } from "../auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
@@ -59,11 +60,12 @@ describe("Auth Server Actions", () => {
       formData.set("name", "a"); // too short
       formData.set("email", "invalid");
       formData.set("password", "short");
+      formData.set("confirmPassword", "short");
 
       const result = await signUp(null, formData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
+      expect(result.fieldErrors).toBeDefined();
     });
 
     it("should return error if user already exists", async () => {
@@ -83,11 +85,12 @@ describe("Auth Server Actions", () => {
       formData.set("name", "Test User");
       formData.set("email", "test@test.com");
       formData.set("password", "password123");
+      formData.set("confirmPassword", "password123");
 
       const result = await signUp(null, formData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("userExists");
+      expect(result.fieldErrors?.email).toContain("userExists");
     });
 
     it("should create user and return success", async () => {
@@ -98,6 +101,7 @@ describe("Auth Server Actions", () => {
       formData.set("name", "Test User");
       formData.set("email", "test@test.com");
       formData.set("password", "password123");
+      formData.set("confirmPassword", "password123");
 
       const result = await signUp(null, formData);
 
@@ -109,7 +113,7 @@ describe("Auth Server Actions", () => {
         },
       });
       expect(result.success).toBe(true);
-      expect(result.error).toBeUndefined();
+      expect(result.fieldErrors).toBeUndefined();
     });
   });
 
@@ -122,7 +126,7 @@ describe("Auth Server Actions", () => {
       const result = await signIn(null, formData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe("invalidEmail");
+      expect(result.fieldErrors?.email).toContain("invalidEmail");
     });
 
     it("should return success when nextAuthSignIn succeeds", async () => {
@@ -191,12 +195,12 @@ describe("Auth Server Actions", () => {
         email: "test@test.com",
         passwordHash: "hash",
       };
-      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(user as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(user as unknown as User);
       vi.mocked(generatePasswordResetToken).mockResolvedValueOnce({
         identifier: "test@test.com",
         token: "token123",
         expires: new Date(),
-      } as any);
+      } as unknown as VerificationToken);
 
       const formData = new FormData();
       formData.set("email", "test@test.com");
@@ -214,7 +218,7 @@ describe("Auth Server Actions", () => {
         email: "test@test.com",
         passwordHash: null,
       };
-      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(user as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(user as unknown as User);
 
       const formData = new FormData();
       formData.set("email", "test@test.com");
@@ -252,11 +256,11 @@ describe("Auth Server Actions", () => {
         token: "token123",
         expires: new Date(Date.now() + 100000),
       };
-      vi.mocked(getPasswordResetTokenByToken).mockResolvedValueOnce(token as any);
+      vi.mocked(getPasswordResetTokenByToken).mockResolvedValueOnce(token as unknown as VerificationToken);
       vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
         id: "1",
         email: "test@test.com",
-      } as any);
+      } as unknown as User);
       vi.mocked(bcrypt.hash).mockResolvedValueOnce("new_hash" as never);
 
       const formData = new FormData();
@@ -275,7 +279,7 @@ describe("Auth Server Actions", () => {
         token: "token123",
         expires: new Date(Date.now() - 100000),
       };
-      vi.mocked(getPasswordResetTokenByToken).mockResolvedValueOnce(token as any);
+      vi.mocked(getPasswordResetTokenByToken).mockResolvedValueOnce(token as unknown as VerificationToken);
 
       const formData = new FormData();
       formData.set("password", "newpassword123");

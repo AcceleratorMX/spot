@@ -20,6 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { SocialButtons } from "@/components/social-buttons";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export default function SignInPage() {
   const t = useTranslations("auth");
@@ -50,7 +51,7 @@ export default function SignInPage() {
           {t("signInDescription")}
         </CardDescription>
       </CardHeader>
-      <form action={formAction}>
+      <form action={formAction} noValidate>
         <CardContent className="space-y-4">
           {state?.error && (
             <div
@@ -61,19 +62,29 @@ export default function SignInPage() {
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="email">{t("email")}</Label>
+            <Label htmlFor="email" className={state?.fieldErrors?.email ? "text-destructive" : ""}>
+              {t("email")}
+            </Label>
             <Input
               id="email"
               name="email"
               type="email"
               placeholder="name@example.com"
-              required
               autoComplete="email"
+              defaultValue={state?.fields?.email}
+              className={state?.fieldErrors?.email ? "border-destructive focus-visible:ring-destructive" : ""}
             />
+            {state?.fieldErrors?.email?.map((error) => (
+              <p key={error} className="text-xs text-destructive">
+                {t(`errors.${error}`)}
+              </p>
+            ))}
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">{t("password")}</Label>
+              <Label htmlFor="password" className={state?.fieldErrors?.password ? "text-destructive" : ""}>
+                {t("password")}
+              </Label>
               <Link
                 href={`/${locale}/forgot-password`}
                 className="text-xs text-primary hover:underline"
@@ -81,13 +92,17 @@ export default function SignInPage() {
                 {t("forgotPassword")}
               </Link>
             </div>
-            <Input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
-              required
               autoComplete="current-password"
+              className={state?.fieldErrors?.password ? "border-destructive focus-visible:ring-destructive" : ""}
             />
+            {state?.fieldErrors?.password?.map((error) => (
+              <p key={error} className="text-xs text-destructive">
+                {t(`errors.${error}`)}
+              </p>
+            ))}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">

@@ -14,6 +14,8 @@ import { forgotPasswordSchema, resetPasswordSchema } from "@/lib/validations/aut
 export type AuthActionResult = {
   success: boolean;
   error?: string;
+  fieldErrors?: Record<string, string[]>;
+  fields?: Record<string, string>;
 };
 
 const SALT_ROUNDS = 12;
@@ -26,29 +28,45 @@ export async function signUp(
     name: formData.get("name") as string,
     email: formData.get("email") as string,
     password: formData.get("password") as string,
+    confirmPassword: formData.get("confirmPassword") as string,
   };
 
   const validated = signUpSchema.safeParse(rawData);
+  const fieldErrors: Record<string, string[]> = {};
 
   if (!validated.success) {
+    validated.error.issues.forEach((issue) => {
+      const path = issue.path[0] as string;
+      if (!fieldErrors[path]) fieldErrors[path] = [];
+      fieldErrors[path].push(issue.message);
+    });
+  }
+
+  // Check for existing user even if Zod validation failed (if we have a semi-valid email)
+  const email = rawData.email;
+  if (email && email.includes("@")) {
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      if (!fieldErrors.email) fieldErrors.email = [];
+      fieldErrors.email.push("userExists");
+    }
+  }
+
+  if (Object.keys(fieldErrors).length > 0 || !validated.success) {
     return {
       success: false,
-      error: validated.error.issues[0]?.message ?? "invalidData",
+      fieldErrors,
+      fields: {
+        name: rawData.name,
+        email: rawData.email,
+      },
     };
   }
 
-  const { email, password, name } = validated.data;
-
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
-  });
-
-  if (existingUser) {
-    return {
-      success: false,
-      error: "userExists",
-    };
-  }
+  const { password, name } = validated.data;
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
@@ -85,9 +103,19 @@ export async function signIn(
   const validated = signInSchema.safeParse(rawData);
 
   if (!validated.success) {
+    const fieldErrors: Record<string, string[]> = {};
+    validated.error.issues.forEach((issue) => {
+      const path = issue.path[0] as string;
+      if (!fieldErrors[path]) fieldErrors[path] = [];
+      fieldErrors[path].push(issue.message);
+    });
+
     return {
       success: false,
-      error: validated.error.issues[0]?.message ?? "invalidData",
+      fieldErrors,
+      fields: {
+        email: rawData.email,
+      },
     };
   }
 
