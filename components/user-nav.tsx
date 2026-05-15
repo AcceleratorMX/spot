@@ -5,7 +5,7 @@ import { LogOut, User } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { Link, useRouter } from "@/i18n/navigation";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,6 +20,7 @@ type UserNavProps = {
   user: {
     name?: string | null;
     email?: string | null;
+    image?: string | null;
   };
 };
 
@@ -51,6 +52,9 @@ export function UserNav({ user }: UserNavProps) {
           id="user-nav-trigger"
         >
           <Avatar className="h-8 w-8">
+            {user.image && (
+              <AvatarImage src={user.image} alt={user.name || ""} />
+            )}
             <AvatarFallback className="bg-primary/10 text-primary text-xs">
               {initials}
             </AvatarFallback>

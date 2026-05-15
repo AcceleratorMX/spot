@@ -8,7 +8,11 @@ export async function Navbar() {
     <NavbarClient
       user={
         session?.user
-          ? { name: session.user.name, email: session.user.email }
+          ? { 
+              name: session.user.name, 
+              email: session.user.email,
+              image: session.user.image 
+            }
           : null
       }
     />
