@@ -1,12 +1,12 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Prisma, Priority } from "@prisma/client";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, CheckCircle2, Circle, Clock } from "lucide-react";
-import { useLocale } from "next-intl";
 import { format } from "date-fns";
 import { uk, enUS } from "date-fns/locale";
+import { Link } from "@/i18n/navigation";
 
 type TaskWithContext = Prisma.TaskGetPayload<{
   include: {
@@ -55,39 +55,40 @@ export function MyTasks({ tasks }: MyTasksProps) {
   return (
     <div className="space-y-4">
       {tasks.map((task) => (
-        <div
-          key={task.id}
-          className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-        >
-          <div className="mt-1">
-            {task.column.title.toLowerCase().includes("done") || 
-             task.column.title.toLowerCase().includes("готово") ? (
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
-            ) : (
-              <Circle className="h-5 w-5 text-muted-foreground" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <h4 className="font-semibold text-sm truncate">{task.title}</h4>
-              <Badge variant="outline" className={getPriorityColor(task.priority)}>
-                {bt(task.priority.toLowerCase())}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {task.column.board.title} / {task.column.title}
-              </span>
-              {task.dueDate && (
-                <span className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  {format(new Date(task.dueDate), "MMM d", { locale: dateLocale })}
-                </span>
+        <Link key={task.id} href={`/boards/${task.column.boardId}`} className="block">
+          <div
+            className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+          >
+            <div className="mt-1">
+              {task.column.title.toLowerCase().includes("done") || 
+               task.column.title.toLowerCase().includes("готово") ? (
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+              ) : (
+                <Circle className="h-5 w-5 text-muted-foreground" />
               )}
             </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <h4 className="font-semibold text-sm truncate">{task.title}</h4>
+                <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                  {bt(task.priority.toLowerCase())}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {task.column.board.title} / {task.column.title}
+                </span>
+                {task.dueDate && (
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {format(new Date(task.dueDate), "MMM d", { locale: dateLocale })}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );

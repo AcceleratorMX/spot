@@ -6,6 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { uk, enUS } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { History, Plus, Pencil, Trash2, Box, Layout, CheckSquare, Tag, Link2 } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 
 type AuditLogWithUser = Prisma.AuditLogGetPayload<{
   include: {
@@ -74,6 +75,17 @@ export function RecentActivity({ logs }: RecentActivityProps) {
     }
   };
 
+  const getEntityLink = (log: AuditLogWithUser) => {
+    if (log.action === AuditAction.DELETE) return null;
+    
+    if (log.entityType === EntityType.BOARD) {
+      return `/boards/${log.entityId}`;
+    }
+    // For tasks and columns, we don't have direct links yet, but we could link to the board if we had boardId in metadata.
+    // For now, only link boards.
+    return null;
+  };
+
   if (logs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
@@ -86,16 +98,9 @@ export function RecentActivity({ logs }: RecentActivityProps) {
   return (
     <ScrollArea className="h-[400px] pr-4">
       <div className="space-y-6">
-        {logs.map((log) => (
-          <div key={log.id} className="relative pl-6 pb-6 last:pb-0">
-            {/* Timeline line */}
-            <div className="absolute left-[11px] top-2 bottom-0 w-[2px] bg-muted last:hidden" />
-            
-            {/* Action Icon */}
-            <div className="absolute left-0 top-1 flex h-6 w-6 items-center justify-center rounded-full border bg-background shadow-sm">
-              {getActionIcon(log.action)}
-            </div>
-
+        {logs.map((log) => {
+          const href = getEntityLink(log);
+          const content = (
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 text-sm">
                 <span className="font-semibold text-foreground">
@@ -111,7 +116,7 @@ export function RecentActivity({ logs }: RecentActivityProps) {
               </div>
               
               {log.entityTitle && (
-                <div className="text-sm font-medium text-foreground/80 mt-0.5">
+                <div className="text-sm font-medium text-foreground/80 mt-0.5 group-hover:text-primary transition-colors">
                   &quot;{log.entityTitle}&quot;
                 </div>
               )}
@@ -123,8 +128,28 @@ export function RecentActivity({ logs }: RecentActivityProps) {
                 })}
               </div>
             </div>
-          </div>
-        ))}
+          );
+
+          return (
+            <div key={log.id} className="relative pl-6 pb-6 last:pb-0 group">
+              {/* Timeline line */}
+              <div className="absolute left-[11px] top-2 bottom-0 w-[2px] bg-muted last:hidden" />
+              
+              {/* Action Icon */}
+              <div className="absolute left-0 top-1 flex h-6 w-6 items-center justify-center rounded-full border bg-background shadow-sm z-10">
+                {getActionIcon(log.action)}
+              </div>
+
+              {href ? (
+                <Link href={href}>
+                  {content}
+                </Link>
+              ) : (
+                content
+              )}
+            </div>
+          );
+        })}
       </div>
     </ScrollArea>
   );

@@ -4,8 +4,7 @@ import { useTranslations } from "next-intl";
 import { Prisma } from "@prisma/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Star, Layout, ChevronRight } from "lucide-react";
-import Link from "next/link";
-import { useLocale } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 type BoardWithCount = Prisma.BoardGetPayload<{
   include: {
@@ -21,7 +20,6 @@ interface FavoriteBoardsProps {
 
 export function FavoriteBoards({ boards }: FavoriteBoardsProps) {
   const t = useTranslations("dashboard");
-  const locale = useLocale();
 
   if (boards.length === 0) {
     return (
@@ -35,7 +33,7 @@ export function FavoriteBoards({ boards }: FavoriteBoardsProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
       {boards.map((board) => (
-        <Link key={board.id} href={`/${locale}/board/${board.id}`}>
+        <Link key={board.id} href={`/boards/${board.id}`}>
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer group">
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
