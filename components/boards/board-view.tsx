@@ -96,12 +96,22 @@ export function BoardView({ board }: BoardViewProps) {
 
   const [columns, setColumns] = useState(board.columns);
   const [prevColumns, setPrevColumns] = useState(board.columns);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const selectedTaskId = searchParams.get("taskId");
 
   const setView = (newView: "kanban" | "graph") => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("view", newView);
     router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleTaskClick = (taskId: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (taskId) {
+      params.set("taskId", taskId);
+    } else {
+      params.delete("taskId");
+    }
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   useEffect(() => {
@@ -236,16 +246,16 @@ export function BoardView({ board }: BoardViewProps) {
             </div>
             {isOwner && <BoardSettingsDialog board={board} />}
           </div>
-          
+
           <div className="flex items-center gap-4">
             <div className="flex items-center bg-muted/50 p-1 rounded-lg border">
               <button
                 onClick={() => setView("kanban")}
                 className={cn(
                   "flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all",
-                  view === "kanban" 
-                    ? "bg-background text-foreground shadow-sm" 
-                    : "text-muted-foreground hover:text-foreground"
+                  view === "kanban"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <Kanban className="h-4 w-4" />
@@ -255,9 +265,9 @@ export function BoardView({ board }: BoardViewProps) {
                 onClick={() => setView("graph")}
                 className={cn(
                   "flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all",
-                  view === "graph" 
-                    ? "bg-background text-foreground shadow-sm" 
-                    : "text-muted-foreground hover:text-foreground"
+                  view === "graph"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <GitGraph className="h-4 w-4" />
@@ -296,7 +306,9 @@ export function BoardView({ board }: BoardViewProps) {
               type="column"
             >
               {(provided) => {
-                const allTasks = columns.flatMap(c => c.tasks.map(t => ({ id: t.id, title: t.title })));
+                const allTasks = columns.flatMap((c) =>
+                  c.tasks.map((t) => ({ id: t.id, title: t.title })),
+                );
                 return (
                   <div
                     {...provided.droppableProps}
@@ -315,17 +327,20 @@ export function BoardView({ board }: BoardViewProps) {
                         allTasks={allTasks}
                       />
                     ))}
-                  {provided.placeholder}
-                  <div className="w-80 shrink-0">
-                    <CreateColumnDialog boardId={board.id} />
-                  </div>
+                    {provided.placeholder}
+                    <div className="w-80 shrink-0">
+                      <CreateColumnDialog boardId={board.id} />
+                    </div>
                   </div>
                 );
               }}
             </Droppable>
           </DragDropContext>
         ) : (
-          <DependencyGraph board={board} onTaskClick={(id) => setSelectedTaskId(id)} />
+          <DependencyGraph
+            board={board}
+            onTaskClick={(id) => handleTaskClick(id)}
+          />
         )}
       </div>
 
@@ -335,10 +350,12 @@ export function BoardView({ board }: BoardViewProps) {
           boardId={board.id}
           members={allMembers}
           open={!!selectedTaskId}
-          onOpenChange={(open) => !open && setSelectedTaskId(null)}
+          onOpenChange={(open) => !open && handleTaskClick(null)}
           allLabels={board.labels}
           boardOwnerId={board.userId}
-          allTasks={columns.flatMap(c => c.tasks.map(t => ({ id: t.id, title: t.title })))}
+          allTasks={columns.flatMap((c) =>
+            c.tasks.map((t) => ({ id: t.id, title: t.title })),
+          )}
         />
       )}
     </div>

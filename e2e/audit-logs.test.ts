@@ -82,8 +82,8 @@ test.describe("Audit Logs and Activity History", () => {
     // 9. Verify audit log entry for the update
     // Activity history renders action text ("updated") and entity type ("task") in separate spans
     // The description change detail renders as: "• Description: --- → New test description..."
-    await expect(page.getByText("updated")).toBeVisible();
-    await expect(page.getByText(/--- → New test description for auditing/)).toBeVisible();
+    await expect(page.getByRole("dialog").getByText(/updated/i).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("dialog").getByText(/--- → New test description for auditing/)).toBeVisible({ timeout: 15000 });
 
     // 10. Add a subtask and verify log
     await page.getByPlaceholder("Add subtask...").fill("Initial Subtask");

@@ -10,11 +10,12 @@ export async function getAuditLogs(entityId: string, entityType: EntityType) {
     throw new Error("Unauthorized");
   }
 
+  const where = entityType === EntityType.BOARD
+    ? { boardId: entityId }
+    : { entityId, entityType };
+
   return await prisma.auditLog.findMany({
-    where: {
-      entityId,
-      entityType,
-    },
+    where,
     include: {
       user: {
         select: {

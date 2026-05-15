@@ -93,6 +93,8 @@ model Board {
   labels      Label[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model BoardMember {
@@ -117,6 +119,8 @@ model Column {
   tasks     Task[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([boardId])
 }
 
 model Task {
@@ -139,6 +143,9 @@ model Task {
   dependents     TaskDependency[] @relation("PrecedingTask")
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  @@index([columnId])
+  @@index([userId])
 }
 
 model Subtask {
@@ -214,6 +221,8 @@ model AuditLog {
   entityId    String
   entityType  EntityType
   entityTitle String?
+  boardId     String?
+  boardTitle  String?
   oldData     Json?
   newData     Json?
   userId      String
@@ -221,4 +230,6 @@ model AuditLog {
   createdAt   DateTime    @default(now())
 
   @@index([entityId, entityType])
+  @@index([userId])
+  @@index([boardId])
 }

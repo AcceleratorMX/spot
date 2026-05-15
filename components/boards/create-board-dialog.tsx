@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { Plus } from "lucide-react";
 import { createBoard } from "@/app/actions/boards";
@@ -39,7 +39,11 @@ export function CreateBoardDialog() {
     } else {
       setOpen(false);
       setLoading(false);
-      router.refresh();
+      if (result.boardId) {
+        router.push(`/boards/${result.boardId}`);
+      } else {
+        router.refresh();
+      }
     }
   }
 

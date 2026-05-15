@@ -20,10 +20,13 @@ export async function createLabel(boardId: string, name: string, color: string) 
       }
     });
 
+    const board = await prisma.board.findUnique({ where: { id: boardId } });
     await createAuditLog({
       entityId: label.id,
       entityTitle: label.name,
       entityType: EntityType.LABEL,
+      boardId,
+      boardTitle: board?.title,
       action: AuditAction.CREATE,
       newData: label,
     });
@@ -44,10 +47,13 @@ export async function deleteLabel(id: string, boardId: string) {
       where: { id }
     });
 
+    const board = await prisma.board.findUnique({ where: { id: boardId } });
     await createAuditLog({
       entityId: label.id,
       entityTitle: label.name,
       entityType: EntityType.LABEL,
+      boardId,
+      boardTitle: board?.title,
       action: AuditAction.DELETE,
       oldData: label,
     });
@@ -72,9 +78,16 @@ export async function addTaskLabel(taskId: string, labelId: string, boardId: str
       }
     });
 
+    const [board, task] = await Promise.all([
+      prisma.board.findUnique({ where: { id: boardId } }),
+      prisma.task.findUnique({ where: { id: taskId }, select: { title: true } }),
+    ]);
     await createAuditLog({
       entityId: taskId,
+      entityTitle: task?.title,
       entityType: EntityType.TASK,
+      boardId,
+      boardTitle: board?.title,
       action: AuditAction.UPDATE,
       newData: { labelId },
     });
@@ -100,9 +113,16 @@ export async function removeTaskLabel(taskId: string, labelId: string, boardId: 
       }
     });
 
+    const [board, task] = await Promise.all([
+      prisma.board.findUnique({ where: { id: boardId } }),
+      prisma.task.findUnique({ where: { id: taskId }, select: { title: true } }),
+    ]);
     await createAuditLog({
       entityId: taskId,
+      entityTitle: task?.title,
       entityType: EntityType.TASK,
+      boardId,
+      boardTitle: board?.title,
       action: AuditAction.UPDATE,
       oldData: { labelId },
     });
