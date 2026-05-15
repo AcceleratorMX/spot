@@ -66,11 +66,8 @@ jobs:
             nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
             nextjs-${{ runner.os }}-
 
-      - name: Generate Prisma client
-        run: pnpm exec prisma generate
-
-      - name: Push database schema
-        run: pnpm exec prisma db push
+      - name: Sync database schema (apply migrations)
+        run: pnpm exec prisma migrate reset --force
 
       - name: Lint
         run: pnpm lint
