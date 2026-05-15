@@ -9,6 +9,7 @@ import { MyTasks } from "@/components/dashboard/my-tasks";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { RefreshHandler } from "@/components/dashboard/refresh-handler";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -21,6 +22,7 @@ export default async function DashboardPage({ params }: Props) {
 
   return (
     <div className="flex-1 overflow-auto p-6 bg-slate-50/40 dark:bg-slate-950/40">
+      <RefreshHandler />
       <div className="space-y-8 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Settings, Plus, Trash2 } from "lucide-react";
+import { Settings, Plus, Trash2, UserMinus, UserPlus } from "lucide-react";
 import { createLabel, deleteLabel } from "@/app/actions/labels";
-import { updateBoard } from "@/app/actions/boards";
+import { updateBoard, inviteMember, removeMember } from "@/app/actions/boards";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import {
   Dialog,
@@ -27,6 +28,14 @@ type BoardSettingsDialogProps = {
     description: string | null;
     userId: string;
     labels: { id: string; name: string; color: string }[];
+    members: {
+      user: {
+        id: string;
+        name: string | null;
+        email: string;
+        image?: string | null;
+      };
+    }[];
   };
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -44,17 +53,8 @@ export function BoardSettingsDialog({
   const [loading, setLoading] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
   const [newLabelColor, setNewLabelColor] = useState("#3b82f6");
+  const [inviteEmail, setInviteEmail] = useState("");
   const t = useTranslations("boards");
-
-  const handleUpdateBoard = async (formData: FormData) => {
-    setLoading(true);
-    const title = formData.get("title") as string;
-    const description = formData.get("description") as string;
-    
-    await updateBoard(board.id, { title, description });
-    setLoading(false);
-    setOpen(false);
-  };
 
   const handleCreateLabel = async () => {
     if (!newLabelName.trim()) return;
@@ -70,6 +70,27 @@ export function BoardSettingsDialog({
     setLoading(false);
   };
 
+  const handleInviteMember = async () => {
+    if (!inviteEmail.trim()) return;
+    setLoading(true);
+    await inviteMember(board.id, inviteEmail);
+    setInviteEmail("");
+    setLoading(false);
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    setLoading(true);
+    await removeMember(board.id, userId);
+    setLoading(false);
+  };
+
+  const handleUpdateField = async (field: "title" | "description", value: string) => {
+    if (value === board[field]) return;
+    setLoading(true);
+    await updateBoard(board.id, { [field]: value });
+    setLoading(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {controlledOpen === undefined && (
@@ -79,22 +100,28 @@ export function BoardSettingsDialog({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("boardSettings") || "Board Settings"}</DialogTitle>
           <DialogDescription className="sr-only">
-            Manage board metadata and labels.
+            Manage board metadata, labels, and members.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-6 py-4">
-          <form action={handleUpdateBoard} className="space-y-4">
+        <div className="space-y-8 py-4">
+          <div className="space-y-4">
             <div className="grid gap-2">
               <Label htmlFor="title">{t("boardTitle")}</Label>
               <Input
                 id="title"
                 name="title"
                 defaultValue={board.title}
+                onBlur={(e) => handleUpdateField("title", e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleUpdateField("title", e.currentTarget.value);
+                  }
+                }}
                 required
               />
             </div>
@@ -104,16 +131,75 @@ export function BoardSettingsDialog({
                 id="description"
                 name="description"
                 defaultValue={board.description || ""}
+                onBlur={(e) => handleUpdateField("description", e.target.value)}
                 placeholder={t("descPlaceholder")}
               />
             </div>
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "..." : t("saveChanges") || "Save Changes"}
-            </Button>
-          </form>
+          </div>
 
+          {/* Members Management */}
           <div className="border-t pt-6 space-y-4">
-            <Label>{t("manageLabels") || "Manage Labels"}</Label>
+            <Label className="text-base font-semibold">{t("manageMembers") || "Manage Members"}</Label>
+            
+            <div className="flex gap-2">
+              <Input
+                placeholder={t("emailPlaceholder") || "Enter email address"}
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                disabled={loading}
+              />
+              <Button 
+                type="button" 
+                onClick={handleInviteMember} 
+                disabled={loading || !inviteEmail.trim()}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                {t("invite")}
+              </Button>
+            </div>
+
+            <div className="space-y-3 mt-4">
+              {board.members.map((member) => (
+                <div key={member.user.id} className="flex items-center justify-between p-2 rounded-lg border bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={member.user.image || ""} />
+                      <AvatarFallback>
+                        {member.user.name?.[0] || member.user.email[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">
+                        {member.user.name || member.user.email}
+                        {member.user.id === board.userId && (
+                          <Badge variant="outline" className="ml-2 text-[10px] py-0">Owner</Badge>
+                        )}
+                      </span>
+                      {member.user.name && (
+                        <span className="text-xs text-muted-foreground">{member.user.email}</span>
+                      )}
+                    </div>
+                  </div>
+                  {member.user.id !== board.userId && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => handleRemoveMember(member.user.id)}
+                      disabled={loading}
+                    >
+                      <UserMinus className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Labels Management */}
+          <div className="border-t pt-6 space-y-4">
+            <Label className="text-base font-semibold">{t("manageLabels") || "Manage Labels"}</Label>
             <div className="flex flex-wrap gap-2">
               {board.labels.map((label) => (
                 <Badge

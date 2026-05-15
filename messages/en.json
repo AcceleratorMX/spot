@@ -144,6 +144,7 @@
     "dueDate": "Due Date",
     "assignee": "Assignee",
     "members": "Members",
+    "manageMembers": "Manage Members",
     "invite": "Invite",
     "inviteMember": "Invite Member",
     "emailPlaceholder": "colleague@example.com",

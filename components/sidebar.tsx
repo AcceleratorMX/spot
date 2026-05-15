@@ -10,6 +10,7 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeft,
+  type LucideIcon,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -35,7 +36,7 @@ export function Sidebar() {
   const locale = useLocale();
   const pathname = usePathname();
 
-  const renderLink = (item: { key: string; href: string; icon: any }) => {
+  const renderLink = (item: { key: string; href: string; icon: LucideIcon }) => {
     const href = `/${locale}${item.href}`;
     const isActive = pathname.startsWith(href);
     const Icon = item.icon;

@@ -61,7 +61,6 @@ export async function getBoards() {
     throw new Error("Unauthorized");
   }
 
-  // Get memberships with sorting by favorite and order
   const memberships = await prisma.boardMember.findMany({
     where: { userId: session.user.id },
     include: {
@@ -76,7 +75,6 @@ export async function getBoards() {
     ]
   });
 
-  // Map to a structure that's easy to use, attaching membership info to the board
   return memberships.map(m => ({
     ...m.board,
     isFavorite: m.isFavorite,
@@ -112,8 +110,6 @@ export async function reorderBoards(boardIds: string[]) {
 
   try {
     const userId = session.user.id;
-    
-    // Perform updates in a transaction
     await prisma.$transaction(
       boardIds.map((id, index) => 
         prisma.boardMember.update({
@@ -127,7 +123,6 @@ export async function reorderBoards(boardIds: string[]) {
         })
       )
     );
-
     revalidatePath("/boards");
     return { success: true };
   } catch (error) {
@@ -138,13 +133,10 @@ export async function reorderBoards(boardIds: string[]) {
 
 export async function createBoard(formData: FormData) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return { error: "Unauthorized" };
-  }
+  if (!session?.user?.id) return { error: "Unauthorized" };
 
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
-  
   const validatedFields = boardSchema.safeParse({ title, description });
 
   if (!validatedFields.success) {
@@ -181,9 +173,6 @@ export async function createBoard(formData: FormData) {
     revalidatePath("/boards");
     return { success: true, boardId: board.id };
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
-      return { error: "Session expired or user not found. Please sign out and sign in again." };
-    }
     console.error("Failed to create board:", error);
     return { error: "Failed to create board" };
   }
@@ -194,19 +183,10 @@ export async function deleteBoard(id: string) {
   if (!session?.user?.id) return { error: "Unauthorized" };
 
   try {
-    // Only owner can delete
-    const existingBoard = await prisma.board.findUnique({
-      where: { id }
-    });
+    const existingBoard = await prisma.board.findUnique({ where: { id } });
+    if (!existingBoard || existingBoard.userId !== session.user.id) return { error: "Forbidden" };
 
-    if (!existingBoard || existingBoard.userId !== session.user.id) {
-      return { error: "Forbidden" };
-    }
-
-    const board = await prisma.board.delete({
-      where: { id }
-    });
-
+    const board = await prisma.board.delete({ where: { id } });
     await createAuditLog({
       entityId: board.id,
       entityTitle: board.title,
@@ -228,16 +208,9 @@ export async function updateBoard(id: string, data: { title?: string; descriptio
   if (!session?.user?.id) return { error: "Unauthorized" };
 
   try {
-    const existingBoard = await prisma.board.findUnique({
-      where: { id }
-    });
-
+    const existingBoard = await prisma.board.findUnique({ where: { id } });
     if (!existingBoard) return { error: "Board not found" };
-    
-    // Only owner can update board settings
-    if (existingBoard.userId !== session.user.id) {
-      return { error: "Forbidden" };
-    }
+    if (existingBoard.userId !== session.user.id) return { error: "Forbidden" };
 
     const board = await prisma.board.update({
       where: { id },
@@ -264,14 +237,11 @@ export async function updateBoard(id: string, data: { title?: string; descriptio
 
 export async function getBoardById(id: string): Promise<BoardWithRelations | null> {
   const session = await auth();
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  if (!session?.user?.id) throw new Error("Unauthorized");
 
   const board = await prisma.board.findFirst({
     where: {
       id,
-      // User must be creator or member
       OR: [
         { userId: session.user.id },
         { members: { some: { userId: session.user.id } } }
@@ -299,13 +269,8 @@ export async function inviteMember(boardId: string, email: string) {
   if (!session?.user?.id) return { error: "Unauthorized" };
 
   try {
-    const userToInvite = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (!userToInvite) {
-      return { error: "User not found" };
-    }
+    const userToInvite = await prisma.user.findUnique({ where: { email } });
+    if (!userToInvite) return { error: "User not found" };
 
     await prisma.boardMember.create({
       data: {
@@ -327,5 +292,46 @@ export async function inviteMember(boardId: string, email: string) {
   } catch (error) {
     console.error("Failed to invite member:", error);
     return { error: "Failed to invite member or user already in board" };
+  }
+}
+
+export async function removeMember(boardId: string, userId: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  try {
+    const board = await prisma.board.findUnique({ where: { id: boardId } });
+    if (!board || board.userId !== session.user.id) return { error: "Forbidden" };
+    if (board.userId === userId) return { error: "Cannot remove owner" };
+
+    // Also remove from all task assignments on this board
+    await prisma.taskAssignee.deleteMany({
+      where: {
+        userId,
+        task: {
+          column: {
+            boardId
+          }
+        }
+      }
+    });
+
+    const removedMember = await prisma.boardMember.delete({
+      where: { boardId_userId: { boardId, userId } },
+      include: { user: { select: { email: true } } }
+    });
+
+    await createAuditLog({
+      entityId: boardId,
+      entityType: EntityType.BOARD,
+      action: AuditAction.UPDATE,
+      newData: { removedUser: removedMember.user.email },
+    });
+
+    revalidatePath(`/boards/${boardId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to remove member:", error);
+    return { error: "Failed to remove member" };
   }
 }

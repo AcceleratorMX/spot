@@ -144,6 +144,7 @@
     "dueDate": "Термін",
     "assignee": "Виконавець",
     "members": "Учасники",
+    "manageMembers": "Керування учасниками",
     "invite": "Запросити",
     "inviteMember": "Запросити учасника",
     "emailPlaceholder": "колега@example.com",
