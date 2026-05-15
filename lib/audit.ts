@@ -6,6 +6,8 @@ interface AuditLogProps {
   entityId: string;
   entityType: EntityType;
   entityTitle?: string;
+  boardId?: string;
+  boardTitle?: string;
   action: AuditAction;
   oldData?: Prisma.InputJsonValue;
   newData?: Prisma.InputJsonValue;
@@ -19,13 +21,15 @@ export const createAuditLog = async (props: AuditLogProps) => {
       return;
     }
 
-    const { entityId, entityType, entityTitle, action, oldData, newData } = props;
+    const { entityId, entityType, entityTitle, boardId, boardTitle, action, oldData, newData } = props;
 
     await prisma.auditLog.create({
       data: {
         entityId,
         entityType,
         entityTitle,
+        boardId,
+        boardTitle,
         action,
         oldData: oldData ?? Prisma.JsonNull,
         newData: newData ?? Prisma.JsonNull,

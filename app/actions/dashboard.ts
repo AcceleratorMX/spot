@@ -70,7 +70,6 @@ export async function getDashboardData() {
   });
 
   // 3. Recent Activity (Latest 10 logs by the user or on boards where user is a member)
-  // For simplicity, let's start with logs created by the user
   const recentActivity = await prisma.auditLog.findMany({
     where: { userId },
     include: {
@@ -85,34 +84,6 @@ export async function getDashboardData() {
     orderBy: { createdAt: "desc" },
     take: 10,
   });
-
-  // Enrich activity with boardId for navigation
-  const enrichedActivity = await Promise.all(
-    recentActivity.map(async (log) => {
-      let boardId: string | null = null;
-
-      if (log.entityType === "BOARD") {
-        boardId = log.entityId;
-      } else if (log.entityType === "COLUMN") {
-        const column = await prisma.column.findUnique({
-          where: { id: log.entityId },
-          select: { boardId: true },
-        });
-        boardId = column?.boardId || null;
-      } else if (log.entityType === "TASK") {
-        const task = await prisma.task.findUnique({
-          where: { id: log.entityId },
-          include: { column: { select: { boardId: true } } },
-        });
-        boardId = task?.column?.boardId || null;
-      }
-
-      return {
-        ...log,
-        boardId,
-      };
-    })
-  );
 
   // 4. My Tasks (assigned to user)
   const myTasks = await prisma.task.findMany({
@@ -143,7 +114,7 @@ export async function getDashboardData() {
       highPriorityTasksCount,
     },
     favoriteBoards: favoriteBoards.map((m) => m.board),
-    recentActivity: enrichedActivity,
+    recentActivity: recentActivity,
     myTasks,
   };
 }

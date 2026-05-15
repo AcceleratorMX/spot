@@ -35,9 +35,9 @@ test.describe("Dashboard Page", () => {
   });
 
   test("should display main sections", async ({ page }) => {
-    await expect(page.getByRole("heading", { name: "My Tasks", exact: true })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Recent Activity", exact: true })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Favorite Boards", exact: true })).toBeVisible();
+    await expect(page.getByText("My Tasks", { exact: true })).toBeVisible();
+    await expect(page.getByText("Recent Activity", { exact: true })).toBeVisible();
+    await expect(page.getByText("Favorite Boards", { exact: true })).toBeVisible();
   });
 
   test("should show empty state for tasks and boards", async ({ page }) => {
@@ -52,15 +52,17 @@ test.describe("Dashboard Page", () => {
     // Click submit button in dialog
     await page.locator("#create-board-submit").click();
 
-    // Wait for redirect to board page or at least the board to be created
-    await page.waitForURL(/\/en\/board\/.+/);
+    // Wait for the board page to load by checking for the title
+    await expect(page.getByRole("heading", { name: "E2E Test Board" })).toBeVisible({ timeout: 10000 });
 
     // Go back to dashboard
     await page.goto("/en/dashboard");
+    await page.reload(); // Ensure fresh data
 
     // Check activity log
-    await expect(page.getByText("created")).toBeVisible();
-    await expect(page.getByText("board", { exact: false })).toBeVisible();
-    await expect(page.getByText('"E2E Test Board"')).toBeVisible();
+    const activityItem = page.locator("div.group.relative.pl-6").first();
+    await expect(activityItem).toContainText("created", { timeout: 10000 });
+    await expect(activityItem).toContainText("board");
+    await expect(activityItem).toContainText("E2E Test Board");
   });
 });

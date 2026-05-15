@@ -95,7 +95,7 @@ export function BoardSettingsDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       {controlledOpen === undefined && (
         <DialogTrigger asChild>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" id="board-settings-trigger">
             <Settings className="h-4 w-4" />
           </Button>
         </DialogTrigger>
@@ -143,6 +143,7 @@ export function BoardSettingsDialog({
             
             <div className="flex gap-2">
               <Input
+                id="invite-member-input"
                 placeholder={t("emailPlaceholder") || "Enter email address"}
                 type="email"
                 value={inviteEmail}
@@ -150,6 +151,7 @@ export function BoardSettingsDialog({
                 disabled={loading}
               />
               <Button 
+                id="invite-member-submit"
                 type="button" 
                 onClick={handleInviteMember} 
                 disabled={loading || !inviteEmail.trim()}
@@ -183,6 +185,7 @@ export function BoardSettingsDialog({
                   </div>
                   {member.user.id !== board.userId && (
                     <Button
+                      id={`remove-member-${member.user.id}`}
                       variant="ghost"
                       size="icon"
                       className="text-destructive hover:text-destructive hover:bg-destructive/10"

@@ -221,6 +221,8 @@ model AuditLog {
   entityId    String
   entityType  EntityType
   entityTitle String?
+  boardId     String?
+  boardTitle  String?
   oldData     Json?
   newData     Json?
   userId      String
@@ -229,4 +231,5 @@ model AuditLog {
 
   @@index([entityId, entityType])
   @@index([userId])
+  @@index([boardId])
 }

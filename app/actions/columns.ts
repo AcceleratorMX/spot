@@ -27,10 +27,13 @@ export async function createColumn(boardId: string, title: string) {
       },
     });
 
+    const board = await prisma.board.findUnique({ where: { id: boardId } });
     await createAuditLog({
       entityId: column.id,
       entityTitle: column.title,
       entityType: EntityType.COLUMN,
+      boardId,
+      boardTitle: board?.title,
       action: AuditAction.CREATE,
       newData: column,
     });
@@ -73,10 +76,13 @@ export async function renameColumn(id: string, title: string, boardId: string) {
       data: { title }
     });
 
+    const board = await prisma.board.findUnique({ where: { id: boardId } });
     await createAuditLog({
       entityId: column.id,
       entityTitle: column.title,
       entityType: EntityType.COLUMN,
+      boardId,
+      boardTitle: board?.title,
       action: AuditAction.UPDATE,
       newData: { title }
     });
@@ -124,10 +130,13 @@ export async function deleteColumn(id: string, boardId: string) {
         where: { id }
       });
 
+      const board = await tx.board.findUnique({ where: { id: boardId } });
       await createAuditLog({
         entityId: deletedColumn.id,
         entityTitle: deletedColumn.title,
         entityType: EntityType.COLUMN,
+        boardId,
+        boardTitle: board?.title,
         action: AuditAction.DELETE,
         oldData: deletedColumn,
       });

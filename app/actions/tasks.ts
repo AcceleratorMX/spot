@@ -28,10 +28,13 @@ export async function createTask(columnId: string, title: string, boardId: strin
       },
     });
 
+    const board = await prisma.board.findUnique({ where: { id: boardId } });
     await createAuditLog({
       entityId: task.id,
       entityTitle: task.title,
       entityType: EntityType.TASK,
+      boardId,
+      boardTitle: board?.title,
       action: AuditAction.CREATE,
       newData: task,
     });
@@ -90,10 +93,13 @@ export async function updateTask(
         data: rest
       });
 
+      const boardObj = await tx.board.findUnique({ where: { id: boardId } });
       await createAuditLog({
         entityId: task.id,
         entityTitle: task.title,
         entityType: EntityType.TASK,
+        boardId,
+        boardTitle: boardObj?.title,
         action: AuditAction.UPDATE,
         oldData: existingTask,
         newData: data,
@@ -152,10 +158,13 @@ export async function deleteTask(id: string, boardId: string) {
       where: { id }
     });
 
+    const boardObj = await prisma.board.findUnique({ where: { id: boardId } });
     await createAuditLog({
       entityId: task.id,
       entityTitle: task.title,
       entityType: EntityType.TASK,
+      boardId,
+      boardTitle: boardObj?.title,
       action: AuditAction.DELETE,
       oldData: task,
     });
@@ -204,9 +213,16 @@ export async function createSubtask(taskId: string, title: string, boardId: stri
       }
     });
 
+    const [board, parentTask] = await Promise.all([
+      prisma.board.findUnique({ where: { id: boardId } }),
+      prisma.task.findUnique({ where: { id: taskId }, select: { title: true } }),
+    ]);
     await createAuditLog({
       entityId: taskId,
+      entityTitle: parentTask?.title,
       entityType: EntityType.TASK,
+      boardId,
+      boardTitle: board?.title,
       action: AuditAction.UPDATE,
       newData: { subtaskAdded: title }
     });
@@ -229,9 +245,16 @@ export async function toggleSubtask(id: string, isDone: boolean, boardId: string
       data: { isDone }
     });
 
+    const [board, parentTask] = await Promise.all([
+      prisma.board.findUnique({ where: { id: boardId } }),
+      prisma.task.findUnique({ where: { id: subtask.taskId }, select: { title: true } }),
+    ]);
     await createAuditLog({
       entityId: subtask.taskId,
+      entityTitle: parentTask?.title,
       entityType: EntityType.TASK,
+      boardId,
+      boardTitle: board?.title,
       action: AuditAction.UPDATE,
       newData: { subtaskToggled: `${subtask.title} (${isDone ? "done" : "todo"})` }
     });
@@ -254,9 +277,16 @@ export async function deleteSubtask(id: string, boardId: string) {
       where: { id }
     });
 
+    const [board, parentTask] = await Promise.all([
+      prisma.board.findUnique({ where: { id: boardId } }),
+      prisma.task.findUnique({ where: { id: subtask.taskId }, select: { title: true } }),
+    ]);
     await createAuditLog({
       entityId: subtask.taskId,
+      entityTitle: parentTask?.title,
       entityType: EntityType.TASK,
+      boardId,
+      boardTitle: board?.title,
       action: AuditAction.UPDATE,
       oldData: { subtask: subtask.title }
     });
@@ -322,6 +352,8 @@ export async function addTaskDependency(
       entityId: dependentTaskId,
       entityTitle: depTask.title,
       entityType: EntityType.TASK,
+      boardId,
+      boardTitle: board.title,
       action: AuditAction.UPDATE,
       newData: { dependencyAdded: preTask.title },
     });
@@ -331,6 +363,8 @@ export async function addTaskDependency(
       entityId: precedingTaskId,
       entityTitle: preTask.title,
       entityType: EntityType.TASK,
+      boardId,
+      boardTitle: board.title,
       action: AuditAction.UPDATE,
       newData: { prerequisiteFor: depTask.title },
     });
@@ -387,6 +421,8 @@ export async function removeTaskDependency(
         entityId: dependentTaskId,
         entityTitle: depTask.title,
         entityType: EntityType.TASK,
+        boardId,
+        boardTitle: board.title,
         action: AuditAction.UPDATE,
         newData: { dependencyRemoved: preTask.title },
       });
@@ -396,6 +432,8 @@ export async function removeTaskDependency(
         entityId: precedingTaskId,
         entityTitle: preTask.title,
         entityType: EntityType.TASK,
+        boardId,
+        boardTitle: board.title,
         action: AuditAction.UPDATE,
         newData: { prerequisiteRemoved: depTask.title },
       });

@@ -166,6 +166,8 @@ export async function createBoard(formData: FormData) {
       entityId: board.id,
       entityTitle: board.title,
       entityType: EntityType.BOARD,
+      boardId: board.id,
+      boardTitle: board.title,
       action: AuditAction.CREATE,
       newData: board,
     });
@@ -191,6 +193,8 @@ export async function deleteBoard(id: string) {
       entityId: board.id,
       entityTitle: board.title,
       entityType: EntityType.BOARD,
+      boardId: board.id,
+      boardTitle: board.title,
       action: AuditAction.DELETE,
       oldData: board,
     });
@@ -221,6 +225,8 @@ export async function updateBoard(id: string, data: { title?: string; descriptio
       entityId: board.id,
       entityTitle: board.title,
       entityType: EntityType.BOARD,
+      boardId: board.id,
+      boardTitle: board.title,
       action: AuditAction.UPDATE,
       oldData: { title: existingBoard.title, description: existingBoard.description },
       newData: data,
@@ -280,9 +286,13 @@ export async function inviteMember(boardId: string, email: string) {
       }
     });
 
+    const board = await prisma.board.findUnique({ where: { id: boardId } });
     await createAuditLog({
       entityId: boardId,
+      entityTitle: board?.title,
       entityType: EntityType.BOARD,
+      boardId,
+      boardTitle: board?.title,
       action: AuditAction.UPDATE,
       newData: { invitedUser: userToInvite.email },
     });
@@ -323,7 +333,10 @@ export async function removeMember(boardId: string, userId: string) {
 
     await createAuditLog({
       entityId: boardId,
+      entityTitle: board.title,
       entityType: EntityType.BOARD,
+      boardId,
+      boardTitle: board.title,
       action: AuditAction.UPDATE,
       newData: { removedUser: removedMember.user.email },
     });

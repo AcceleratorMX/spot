@@ -54,11 +54,11 @@ export function ActivityHistory({ entityId, entityType, refreshKey }: ActivityHi
   const getActionText = (action: AuditAction) => {
     switch (action) {
       case AuditAction.CREATE:
-        return t("created") || "created";
+        return t("create") || "created";
       case AuditAction.UPDATE:
-        return t("updated") || "updated";
+        return t("update") || "updated";
       case AuditAction.DELETE:
-        return t("deleted") || "deleted";
+        return t("delete") || "deleted";
       default:
         return action;
     }
@@ -226,9 +226,14 @@ export function ActivityHistory({ entityId, entityType, refreshKey }: ActivityHi
                     {getActionText(log.action)}
                   </span>
                   <span className="text-muted-foreground">
-                    {t(entityType.toLowerCase()) || entityType.toLowerCase()}
+                    {t(log.entityType.toLowerCase()) || log.entityType.toLowerCase()}
                   </span>
                 </div>
+                {log.entityTitle && (
+                  <div className="text-[12px] font-medium text-foreground/80 mt-0.5">
+                    &quot;{log.entityTitle}&quot;
+                  </div>
+                )}
                 {renderDetails(log)}
                 <span className="text-[10px] text-muted-foreground mt-1">
                   {formatDistanceToNow(new Date(log.createdAt), {

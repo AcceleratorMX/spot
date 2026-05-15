@@ -5,7 +5,7 @@ import { Prisma, AuditAction, EntityType } from "@prisma/client";
 import { formatDistanceToNow } from "date-fns";
 import { uk, enUS } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { History, Plus, Pencil, Trash2, Box, Layout, CheckSquare, Tag, Link2 } from "lucide-react";
+import { History, Plus, Pencil, Trash2, Box, Layout, CheckSquare, Tag, Link2, ExternalLink } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 
 type AuditLogWithUser = Prisma.AuditLogGetPayload<{
@@ -18,7 +18,7 @@ type AuditLogWithUser = Prisma.AuditLogGetPayload<{
       };
     };
   };
-}> & { boardId?: string | null };
+}>;
 
 interface RecentActivityProps {
   logs: AuditLogWithUser[];
@@ -65,11 +65,11 @@ export function RecentActivity({ logs }: RecentActivityProps) {
   const getActionText = (action: AuditAction) => {
     switch (action) {
       case AuditAction.CREATE:
-        return bt("created") || "created";
+        return bt("create") || "created";
       case AuditAction.UPDATE:
-        return bt("updated") || "updated";
+        return bt("update") || "updated";
       case AuditAction.DELETE:
-        return bt("deleted") || "deleted";
+        return bt("delete") || "deleted";
       default:
         return action;
     }
@@ -78,7 +78,6 @@ export function RecentActivity({ logs }: RecentActivityProps) {
   const getEntityLink = (log: AuditLogWithUser) => {
     if (log.action === AuditAction.DELETE) return null;
     
-    // We enriched the log with boardId in the server action
     if (log.boardId) {
       return `/boards/${log.boardId}`;
     }
@@ -101,8 +100,9 @@ export function RecentActivity({ logs }: RecentActivityProps) {
         {logs.map((log) => {
           const href = getEntityLink(log);
           const content = (
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-sm">
+            <div className="flex flex-col gap-1.5">
+              {/* Action line: User + action + entity type */}
+              <div className="flex items-center flex-wrap gap-2 text-sm">
                 <span className="font-semibold text-foreground">
                   {log.user?.name || log.user?.email}
                 </span>
@@ -114,14 +114,27 @@ export function RecentActivity({ logs }: RecentActivityProps) {
                   {bt(log.entityType.toLowerCase()) || log.entityType.toLowerCase()}
                 </span>
               </div>
-              
+
+              {/* Entity title — what was changed */}
               {log.entityTitle && (
-                <div className="text-sm font-medium text-foreground/80 mt-0.5 group-hover:text-primary transition-colors">
-                  &quot;{log.entityTitle}&quot;
+                <div className="flex items-center gap-1.5 text-sm font-medium text-foreground/80 group-hover:text-primary transition-colors">
+                  <span>&quot;{log.entityTitle}&quot;</span>
+                  {href && (
+                    <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+                  )}
                 </div>
               )}
 
-              <div className="text-[10px] text-muted-foreground mt-1">
+              {/* Board context — on which board */}
+              {log.boardTitle && log.entityType !== "BOARD" && (
+                <div className="text-xs text-muted-foreground">
+                  {t("onBoard")}{" "}
+                  <span className="font-medium text-foreground/70">{log.boardTitle}</span>
+                </div>
+              )}
+
+              {/* Timestamp */}
+              <div className="text-[10px] text-muted-foreground mt-0.5">
                 {formatDistanceToNow(new Date(log.createdAt), {
                   addSuffix: true,
                   locale: dateLocale,
@@ -141,11 +154,13 @@ export function RecentActivity({ logs }: RecentActivityProps) {
               </div>
 
               {href ? (
-                <Link href={href}>
+                <Link href={href} className="block rounded-lg px-3 py-2 -mx-1 hover:bg-muted/50 transition-colors cursor-pointer">
                   {content}
                 </Link>
               ) : (
-                content
+                <div className="px-3 py-2 -mx-1">
+                  {content}
+                </div>
               )}
             </div>
           );
