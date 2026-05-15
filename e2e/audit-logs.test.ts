@@ -33,7 +33,7 @@ test.describe("Audit Logs and Activity History", () => {
     await page.waitForURL(/\/boards/);
     
     // 2. Create a new board (use the trigger button's stable ID)
-    await page.locator("#create-board-trigger").first().click();
+    await page.getByTestId("create-board-trigger").first().click();
     await page.locator("#title").fill("Audit Test Board");
     await page.locator("#create-board-submit").click();
 
