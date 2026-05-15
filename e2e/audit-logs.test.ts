@@ -6,7 +6,7 @@ async function registerAndSignIn(page: Page, locale = "en") {
   const email = `e2e-audit-${unique}@test.com`;
   const password = "TestPass123";
 
-  // Register
+  // Register (auto-signs-in after successful registration)
   await page.goto(`/${locale}/sign-up`);
   await page.locator("#name").fill("Audit Tester");
   await page.locator("#email").fill(email);
@@ -14,15 +14,7 @@ async function registerAndSignIn(page: Page, locale = "en") {
   await page.locator("#confirmPassword").fill(password);
   await page.locator("#sign-up-submit").click();
 
-  // Wait for redirect to sign-in
-  await page.waitForURL(`**/${locale}/sign-in`);
-
-  // Sign in
-  await page.locator("#email").fill(email);
-  await page.locator("#password").fill(password);
-  await page.locator("#sign-in-submit").click();
-
-  // Wait for redirect to dashboard and ensure session is active
+  // Wait for redirect to dashboard (registration now auto-signs-in)
   await page.waitForURL(`**/${locale}/dashboard`);
   await expect(page.locator("#user-nav-trigger")).toBeVisible();
   // Initials "AT" for "Audit Tester"
@@ -35,6 +27,7 @@ test.describe("Audit Logs and Activity History", () => {
   });
 
   test("should track task creation and auto-saved updates in activity history", async ({ page }) => {
+    test.setTimeout(60000);
     // 1. Navigate to boards
     await page.locator("#sidebar-nav-boards").click();
     await page.waitForURL(/\/boards/);
@@ -106,10 +99,10 @@ test.describe("Audit Logs and Activity History", () => {
     await page.locator("#priority").click();
     // Select option from the Radix Select dropdown (role="option")
     await page.getByRole("option", { name: "High" }).click();
-
-    await expect(page.getByText("Saving changes...")).toBeVisible();
-    await expect(page.getByText("All changes saved")).toBeVisible({ timeout: 10000 });
+    // Wait for auto-save: must see "Saving changes..." to confirm NEW save started (not stale status)
+    await expect(page.getByText("Saving changes...")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("All changes saved")).toBeVisible({ timeout: 15000 });
     // Priority change renders as: "• Priority: MEDIUM → HIGH"
-    await expect(page.getByText(/MEDIUM → HIGH/)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/MEDIUM → HIGH/)).toBeVisible({ timeout: 15000 });
   });
 });

@@ -22,7 +22,13 @@
       "invalidToken": "Невірний або прострочений токен",
       "tokenExpired": "Термін дії токена закінчився",
       "missingToken": "Відсутній токен",
-      "passwordsDoNotMatch": "Паролі не збігаються"
+      "passwordsDoNotMatch": "Паролі не збігаються",
+      "invalidPassword": "Невірний поточний пароль",
+      "socialUserPasswordChange": "Для акаунтів Google/GitHub пароль не можна змінити тут",
+      "newPasswordRequired": "Новий пароль обов'язковий",
+      "somethingWentWrong": "Щось пішло не так",
+      "unauthorized": "Неавторизовано",
+      "userNotFound": "Користувача не знайдено"
     },
     "forgotPassword": "Забули пароль?",
     "resetPassword": "Скинути пароль",
@@ -73,7 +79,14 @@
     "id": "ID",
     "role": "Роль",
     "twoFactor": "Двофакторна автентифікація",
-    "disabled": "Вимкнено"
+    "disabled": "Вимкнено",
+    "currentPassword": "Поточний пароль",
+    "newPassword": "Новий пароль",
+    "confirmNewPassword": "Підтвердіть новий пароль",
+    "updateProfile": "Оновити профіль",
+    "changePassword": "Змінити пароль",
+    "profileUpdated": "Профіль успішно оновлено",
+    "passwordChanged": "Пароль успішно змінено"
   },
   "settings": {
     "appearance": "Зовнішній вигляд",

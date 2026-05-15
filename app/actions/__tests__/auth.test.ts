@@ -112,6 +112,12 @@ describe("Auth Server Actions", () => {
           passwordHash: "hashed_password",
         },
       });
+      // Verify auto-sign-in after registration
+      expect(nextAuthSignIn).toHaveBeenCalledWith("credentials", {
+        email: "test@test.com",
+        password: "password123",
+        redirect: false,
+      });
       expect(result.success).toBe(true);
       expect(result.fieldErrors).toBeUndefined();
     });

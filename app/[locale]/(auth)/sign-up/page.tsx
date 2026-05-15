@@ -34,7 +34,8 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (state?.success) {
-      router.push(`/${locale}/sign-in`);
+      router.push(`/${locale}/dashboard`);
+      router.refresh();
     }
   }, [state?.success, router, locale]);
 

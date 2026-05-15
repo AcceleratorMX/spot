@@ -6,6 +6,7 @@ import { routing } from "@/i18n/routing";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/components/auth-provider";
+import { Toaster } from "sonner";
 
 type Props = {
   children: React.ReactNode;
@@ -29,6 +30,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         <ThemeProvider defaultTheme={theme}>
           <TooltipProvider delayDuration={0}>
             {children}
+            <Toaster position="top-right" richColors />
           </TooltipProvider>
         </ThemeProvider>
       </AuthProvider>

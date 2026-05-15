@@ -22,7 +22,13 @@
       "invalidToken": "Invalid or expired token",
       "tokenExpired": "Token has expired",
       "missingToken": "Missing token",
-      "passwordsDoNotMatch": "Passwords do not match"
+      "passwordsDoNotMatch": "Passwords do not match",
+      "invalidPassword": "Invalid current password",
+      "socialUserPasswordChange": "Google/GitHub accounts cannot change password here",
+      "newPasswordRequired": "New password is required",
+      "somethingWentWrong": "Something went wrong",
+      "unauthorized": "Unauthorized",
+      "userNotFound": "User not found"
     },
     "forgotPassword": "Forgot Password?",
     "resetPassword": "Reset Password",
@@ -73,7 +79,14 @@
     "id": "ID",
     "role": "Role",
     "twoFactor": "Two-factor authentication",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "updateProfile": "Update Profile",
+    "changePassword": "Change Password",
+    "profileUpdated": "Profile updated successfully",
+    "passwordChanged": "Password changed successfully"
   },
   "settings": {
     "appearance": "Appearance",
