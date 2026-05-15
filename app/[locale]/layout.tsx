@@ -1,10 +1,12 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { routing } from "@/i18n/routing";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/components/auth-provider";
+import { Toaster } from "sonner";
 
 type Props = {
   children: React.ReactNode;
@@ -13,6 +15,8 @@ type Props = {
 
 export default async function LocaleLayout({ children, params }: Props) {
   const { locale } = await params;
+  const cookieStore = await cookies();
+  const theme = (cookieStore.get("spot-theme")?.value || "light") as "light" | "dark";
 
   if (!routing.locales.includes(locale as "uk" | "en")) {
     notFound();
@@ -23,9 +27,10 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <NextIntlClientProvider messages={messages}>
       <AuthProvider>
-        <ThemeProvider>
+        <ThemeProvider defaultTheme={theme}>
           <TooltipProvider delayDuration={0}>
             {children}
+            <Toaster position="top-right" richColors />
           </TooltipProvider>
         </ThemeProvider>
       </AuthProvider>

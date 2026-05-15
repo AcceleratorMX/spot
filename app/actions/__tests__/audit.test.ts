@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { getAuditLogs } from "../audit";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { EntityType } from "@prisma/client";
 
 // Mock dependencies
@@ -13,8 +12,9 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+const mockAuth = vi.fn();
 vi.mock("@/auth", () => ({
-  auth: vi.fn(),
+  auth: () => mockAuth(),
 }));
 
 describe("Audit Server Actions", () => {
@@ -24,13 +24,13 @@ describe("Audit Server Actions", () => {
 
   describe("getAuditLogs", () => {
     it("should throw error if unauthorized", async () => {
-      vi.mocked(auth).mockResolvedValueOnce(null);
+      mockAuth.mockResolvedValueOnce(null);
 
       await expect(getAuditLogs("1", EntityType.TASK)).rejects.toThrow("Unauthorized");
     });
 
     it("should return audit logs for a specific entity", async () => {
-      vi.mocked(auth).mockResolvedValueOnce({
+      mockAuth.mockResolvedValueOnce({
         user: { id: "user-1", email: "test@test.com" },
         expires: "1",
       });

@@ -19,6 +19,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { SocialButtons } from "@/components/social-buttons";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export default function SignInPage() {
   const t = useTranslations("auth");
@@ -46,37 +48,61 @@ export default function SignInPage() {
         </div>
         <CardTitle className="text-2xl font-bold">{tNav("signIn")}</CardTitle>
         <CardDescription>
-          {t("errors.invalidData") ? "" : ""}
-          Enter your credentials to access your workspace
+          {t("signInDescription")}
         </CardDescription>
       </CardHeader>
-      <form action={formAction}>
+      <form action={formAction} noValidate>
         <CardContent className="space-y-4">
           {state?.error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive" id="sign-in-error">
+            <div
+              className="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
+              id="sign-in-error"
+            >
               {t(`errors.${state.error}`)}
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className={state?.fieldErrors?.email ? "text-destructive" : ""}>
+              {t("email")}
+            </Label>
             <Input
               id="email"
               name="email"
               type="email"
               placeholder="name@example.com"
-              required
               autoComplete="email"
+              defaultValue={state?.fields?.email}
+              className={state?.fieldErrors?.email ? "border-destructive focus-visible:ring-destructive" : ""}
             />
+            {state?.fieldErrors?.email?.map((error) => (
+              <p key={error} className="text-xs text-destructive">
+                {t(`errors.${error}`)}
+              </p>
+            ))}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" className={state?.fieldErrors?.password ? "text-destructive" : ""}>
+                {t("password")}
+              </Label>
+              <Link
+                href={`/${locale}/forgot-password`}
+                className="text-xs text-primary hover:underline"
+              >
+                {t("forgotPassword")}
+              </Link>
+            </div>
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
-              required
               autoComplete="current-password"
+              className={state?.fieldErrors?.password ? "border-destructive focus-visible:ring-destructive" : ""}
             />
+            {state?.fieldErrors?.password?.map((error) => (
+              <p key={error} className="text-xs text-destructive">
+                {t(`errors.${error}`)}
+              </p>
+            ))}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
@@ -88,8 +114,11 @@ export default function SignInPage() {
           >
             {isPending ? "..." : tNav("signIn")}
           </Button>
+ 
+          <SocialButtons />
+ 
           <p className="text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
+            {t("noAccount")}{" "}
             <Link
               href={`/${locale}/sign-up`}
               className="font-medium text-primary underline-offset-4 hover:underline"

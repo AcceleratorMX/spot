@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { addTaskDependency, removeTaskDependency } from "../tasks";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { createAuditLog } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 
@@ -22,8 +21,9 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+const mockAuth = vi.fn();
 vi.mock("@/auth", () => ({
-  auth: vi.fn(),
+  auth: () => mockAuth(),
 }));
 
 vi.mock("@/lib/audit", () => ({
@@ -46,12 +46,12 @@ describe("Tasks Server Actions - Dependencies", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(auth).mockResolvedValue(mockSession);
+    mockAuth.mockResolvedValue(mockSession);
   });
 
   describe("addTaskDependency", () => {
     it("should return error if unauthorized", async () => {
-      vi.mocked(auth).mockResolvedValueOnce(null);
+      mockAuth.mockResolvedValueOnce(null);
       const result = await addTaskDependency("board-1", "task-dep", "task-pre");
       expect(result.error).toBe("Unauthorized");
     });

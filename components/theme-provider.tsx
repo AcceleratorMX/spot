@@ -1,69 +1,49 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import * as React from "react";
+import { useRouter } from "@/i18n/navigation";
 
-export type Theme = "light" | "dark" | "system";
+export type Theme = "light" | "dark";
 
 type ThemeProviderContextType = {
   theme: Theme;
   setTheme: (theme: Theme) => void;
 };
 
-const ThemeProviderContext = createContext<ThemeProviderContextType>({
-  theme: "system",
+const ThemeProviderContext = React.createContext<ThemeProviderContextType>({
+  theme: "light",
   setTheme: () => {},
 });
 
-const STORAGE_KEY = "spot-theme";
+export function ThemeProvider({
+  children,
+  defaultTheme = "light",
+}: {
+  children: React.ReactNode;
+  defaultTheme?: Theme;
+}) {
+  const [theme, setThemeState] = React.useState<Theme>(defaultTheme);
+  const router = useRouter();
 
-function getSystemTheme(): "light" | "dark" {
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
-}
-
-function applyTheme(theme: Theme) {
-  const resolved = theme === "system" ? getSystemTheme() : theme;
-  document.documentElement.classList.toggle("dark", resolved === "dark");
-}
-
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === "undefined") return "system";
-    const stored = localStorage.getItem(STORAGE_KEY);
-    const validThemes: Theme[] = ["light", "dark", "system"];
-    return stored && validThemes.includes(stored as Theme)
-      ? (stored as Theme)
-      : "system";
-  });
-
-  useEffect(() => {
-    Promise.resolve().then(() => setMounted(true));
+  const applyTheme = React.useCallback((newTheme: Theme) => {
+    if (typeof window === "undefined") return;
+    const root = window.document.documentElement;
+    root.classList.toggle("dark", newTheme === "dark");
   }, []);
 
-  // Apply theme class to document only after mount and on theme change
-  useEffect(() => {
-    if (mounted) {
-      applyTheme(theme);
-    }
-  }, [theme, mounted]);
-
-  useEffect(() => {
-    const mql = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = () => {
-      if (theme === "system") applyTheme("system");
-    };
-    mql.addEventListener("change", handler);
-    return () => mql.removeEventListener("change", handler);
-  }, [theme]);
-
-  const setTheme = useCallback((newTheme: Theme) => {
+  const setTheme = React.useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem(STORAGE_KEY, newTheme);
+    document.cookie = `spot-theme=${newTheme}; path=/; max-age=31536000`;
     applyTheme(newTheme);
-  }, []);
+    
+    React.startTransition(() => {
+      router.refresh();
+    });
+  }, [applyTheme, router]);
+
+  React.useEffect(() => {
+    applyTheme(theme);
+  }, [theme, applyTheme]);
 
   return (
     <ThemeProviderContext.Provider value={{ theme, setTheme }}>
@@ -72,6 +52,4 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useTheme() {
-  return useContext(ThemeProviderContext);
-}
+export const useTheme = () => React.useContext(ThemeProviderContext);

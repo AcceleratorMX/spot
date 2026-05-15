@@ -19,6 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export default function SignUpPage() {
   const t = useTranslations("auth");
@@ -33,7 +34,8 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (state?.success) {
-      router.push(`/${locale}/sign-in`);
+      router.push(`/${locale}/dashboard`);
+      router.refresh();
     }
   }, [state?.success, router, locale]);
 
@@ -45,10 +47,10 @@ export default function SignUpPage() {
         </div>
         <CardTitle className="text-2xl font-bold">{tNav("signUp")}</CardTitle>
         <CardDescription>
-          Create an account to start managing your projects
+          {t("signUpDescription")}
         </CardDescription>
       </CardHeader>
-      <form action={formAction}>
+      <form action={formAction} noValidate>
         <CardContent className="space-y-4">
           {state?.error && (
             <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive" id="sign-up-error">
@@ -56,37 +58,74 @@ export default function SignUpPage() {
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name" className={state?.fieldErrors?.name ? "text-destructive" : ""}>
+              {t("name")}
+            </Label>
             <Input
               id="name"
               name="name"
               type="text"
               placeholder="John Doe"
-              required
               autoComplete="name"
+              defaultValue={state?.fields?.name}
+              className={state?.fieldErrors?.name ? "border-destructive focus-visible:ring-destructive" : ""}
             />
+            {state?.fieldErrors?.name?.map((error) => (
+              <p key={error} className="text-xs text-destructive">
+                {t(`errors.${error}`)}
+              </p>
+            ))}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className={state?.fieldErrors?.email ? "text-destructive" : ""}>
+              {t("email")}
+            </Label>
             <Input
               id="email"
               name="email"
               type="email"
               placeholder="name@example.com"
-              required
               autoComplete="email"
+              defaultValue={state?.fields?.email}
+              className={state?.fieldErrors?.email ? "border-destructive focus-visible:ring-destructive" : ""}
             />
+            {state?.fieldErrors?.email?.map((error) => (
+              <p key={error} className="text-xs text-destructive">
+                {t(`errors.${error}`)}
+              </p>
+            ))}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
+            <Label htmlFor="password" className={state?.fieldErrors?.password ? "text-destructive" : ""}>
+              {t("password")}
+            </Label>
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
-              required
               autoComplete="new-password"
-              minLength={8}
+              className={state?.fieldErrors?.password ? "border-destructive focus-visible:ring-destructive" : ""}
             />
+            {state?.fieldErrors?.password?.map((error) => (
+              <p key={error} className="text-xs text-destructive">
+                {t(`errors.${error}`)}
+              </p>
+            ))}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword" className={state?.fieldErrors?.confirmPassword ? "text-destructive" : ""}>
+              {t("confirmPassword")}
+            </Label>
+            <PasswordInput
+              id="confirmPassword"
+              name="confirmPassword"
+              autoComplete="new-password"
+              className={state?.fieldErrors?.confirmPassword ? "border-destructive focus-visible:ring-destructive" : ""}
+            />
+            {state?.fieldErrors?.confirmPassword?.map((error) => (
+              <p key={error} className="text-xs text-destructive">
+                {t(`errors.${error}`)}
+              </p>
+            ))}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
@@ -99,7 +138,7 @@ export default function SignUpPage() {
             {isPending ? "..." : tNav("signUp")}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
+            {t("alreadyHaveAccount")}{" "}
             <Link
               href={`/${locale}/sign-in`}
               className="font-medium text-primary underline-offset-4 hover:underline"

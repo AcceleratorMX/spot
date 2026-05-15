@@ -55,7 +55,6 @@ describe("ThemeToggle", () => {
     await waitFor(() => {
       expect(screen.getByRole("menuitem", { name: /light/i })).toBeInTheDocument();
       expect(screen.getByRole("menuitem", { name: /dark/i })).toBeInTheDocument();
-      expect(screen.getByRole("menuitem", { name: /system/i })).toBeInTheDocument();
     });
   });
 

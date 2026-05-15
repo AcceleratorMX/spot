@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -18,42 +19,21 @@ export const metadata: Metadata = {
     "SPOT is an advanced project management system with Kanban boards, audit logs, and dependency visualization.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const theme = cookieStore.get("spot-theme")?.value || "light";
+  const isDark = theme === "dark";
+
   return (
     <html
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased bg-background text-foreground`}
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased bg-background text-foreground ${isDark ? "dark" : ""}`}
       suppressHydrationWarning
     >
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var theme = localStorage.getItem('spot-theme');
-                  var isDark = theme === 'dark' || ((!theme || theme === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                  
-                  // Block transitions
-                  var css = document.createElement('style');
-                  css.appendChild(document.createTextNode('* { transition: none !important; }'));
-                  document.head.appendChild(css);
-                  
-                  document.documentElement.classList.toggle('dark', isDark);
-                  
-                  // Unblock transitions after paint
-                  setTimeout(function() {
-                    document.head.removeChild(css);
-                  }, 10);
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
-      </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         {children}
       </body>

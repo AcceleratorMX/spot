@@ -6,22 +6,15 @@ async function registerAndSignIn(page: Page, locale = "en") {
   const email = `e2e-dep-${unique}@test.com`;
   const password = "TestPass123";
 
-  // Register
+  // Register (auto-signs-in after successful registration)
   await page.goto(`/${locale}/sign-up`);
   await page.locator("#name").fill("Dependency Tester");
   await page.locator("#email").fill(email);
   await page.locator("#password").fill(password);
+  await page.locator("#confirmPassword").fill(password);
   await page.locator("#sign-up-submit").click();
 
-  // Wait for redirect to sign-in
-  await page.waitForURL(`**/${locale}/sign-in`);
-
-  // Sign in
-  await page.locator("#email").fill(email);
-  await page.locator("#password").fill(password);
-  await page.locator("#sign-in-submit").click();
-
-  // Wait for redirect to dashboard
+  // Wait for redirect to dashboard (registration now auto-signs-in)
   await page.waitForURL(`**/${locale}/dashboard`);
   await expect(page.locator("#user-nav-trigger")).toBeVisible();
 }

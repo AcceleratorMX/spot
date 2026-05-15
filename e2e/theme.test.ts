@@ -6,16 +6,15 @@ async function registerAndSignIn(page: Page) {
   const email = `e2e-theme-${unique}@test.com`;
   const password = "TestPass123";
 
+  // Register (auto-signs-in after successful registration)
   await page.goto("/en/sign-up");
   await page.locator("#name").fill("Theme Tester");
   await page.locator("#email").fill(email);
   await page.locator("#password").fill(password);
+  await page.locator("#confirmPassword").fill(password);
   await page.locator("#sign-up-submit").click();
-  await page.waitForURL("**/en/sign-in");
 
-  await page.locator("#email").fill(email);
-  await page.locator("#password").fill(password);
-  await page.locator("#sign-in-submit").click();
+  // Wait for redirect to dashboard (registration now auto-signs-in)
   await page.waitForURL("**/en/dashboard");
 }
 
