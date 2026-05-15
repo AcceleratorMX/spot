@@ -20,9 +20,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-const navItems = [
+const topNavItems = [
   { key: "dashboard", href: "/dashboard", icon: LayoutDashboard },
   { key: "boards", href: "/boards", icon: Kanban },
+] as const;
+
+const bottomNavItems = [
   { key: "settings", href: "/settings", icon: Settings },
 ] as const;
 
@@ -31,6 +34,39 @@ export function Sidebar() {
   const t = useTranslations("nav");
   const locale = useLocale();
   const pathname = usePathname();
+
+  const renderLink = (item: { key: string; href: string; icon: any }) => {
+    const href = `/${locale}${item.href}`;
+    const isActive = pathname.startsWith(href);
+    const Icon = item.icon;
+
+    const link = (
+      <Link
+        key={item.key}
+        href={href}
+        id={`sidebar-nav-${item.key}`}
+        className={cn(
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          isActive && "bg-sidebar-accent text-sidebar-primary",
+          collapsed && "justify-center",
+        )}
+      >
+        <Icon className="h-5 w-5 shrink-0" />
+        {!collapsed && <span>{t(item.key)}</span>}
+      </Link>
+    );
+
+    if (collapsed) {
+      return (
+        <Tooltip key={item.key}>
+          <TooltipTrigger asChild>{link}</TooltipTrigger>
+          <TooltipContent side="right">{t(item.key)}</TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    return link;
+  };
 
   return (
     <aside
@@ -56,41 +92,14 @@ export function Sidebar() {
         </Link>
       </div>
 
-      {/* Navigation */}
+      {/* Top Navigation */}
       <nav className="flex-1 space-y-1 p-2">
-        {navItems.map((item) => {
-          const href = `/${locale}${item.href}`;
-          const isActive = pathname.startsWith(href);
-          const Icon = item.icon;
+        {topNavItems.map(renderLink)}
+      </nav>
 
-          const link = (
-            <Link
-              key={item.key}
-              href={href}
-              id={`sidebar-nav-${item.key}`}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                isActive &&
-                  "bg-sidebar-accent text-sidebar-primary",
-                collapsed && "justify-center",
-              )}
-            >
-              <Icon className="h-5 w-5 shrink-0" />
-              {!collapsed && <span>{t(item.key)}</span>}
-            </Link>
-          );
-
-          if (collapsed) {
-            return (
-              <Tooltip key={item.key}>
-                <TooltipTrigger asChild>{link}</TooltipTrigger>
-                <TooltipContent side="right">{t(item.key)}</TooltipContent>
-              </Tooltip>
-            );
-          }
-
-          return link;
-        })}
+      {/* Bottom Navigation */}
+      <nav className="space-y-1 p-2 border-t">
+        {bottomNavItems.map(renderLink)}
       </nav>
 
       {/* Collapse toggle */}
