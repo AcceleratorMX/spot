@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { Priority } from "@prisma/client";
+import { Priority, EntityType } from "@prisma/client";
 
 export async function getDashboardData() {
   const session = await auth();
@@ -85,6 +85,50 @@ export async function getDashboardData() {
     take: 10,
   });
 
+  // Enrich activity with board context if missing (backward compatibility)
+  const enrichedActivity = await Promise.all(
+    recentActivity.map(async (log) => {
+      // If we already have the data, skip
+      if (log.boardId && log.boardTitle) return log;
+
+      let boardId = log.boardId;
+      let boardTitle = log.boardTitle;
+
+      try {
+        if (log.entityType === EntityType.BOARD) {
+          boardId = log.entityId;
+          const board = await prisma.board.findUnique({
+            where: { id: boardId },
+            select: { title: true },
+          });
+          boardTitle = board?.title || null;
+        } else if (log.entityType === EntityType.COLUMN) {
+          const column = await prisma.column.findUnique({
+            where: { id: log.entityId },
+            select: { boardId: true, board: { select: { title: true } } },
+          });
+          boardId = column?.boardId || null;
+          boardTitle = column?.board?.title || null;
+        } else if (log.entityType === EntityType.TASK) {
+          const task = await prisma.task.findUnique({
+            where: { id: log.entityId },
+            include: { column: { select: { boardId: true, board: { select: { title: true } } } } },
+          });
+          boardId = task?.column?.boardId || null;
+          boardTitle = task?.column?.board?.title || null;
+        }
+      } catch (e) {
+        console.error("Enrichment error:", e);
+      }
+
+      return {
+        ...log,
+        boardId,
+        boardTitle,
+      };
+    })
+  );
+
   // 4. My Tasks (assigned to user)
   const myTasks = await prisma.task.findMany({
     where: {
@@ -114,7 +158,7 @@ export async function getDashboardData() {
       highPriorityTasksCount,
     },
     favoriteBoards: favoriteBoards.map((m) => m.board),
-    recentActivity: recentActivity,
+    recentActivity: enrichedActivity,
     myTasks,
   };
 }

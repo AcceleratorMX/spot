@@ -79,6 +79,9 @@ export function RecentActivity({ logs }: RecentActivityProps) {
     if (log.action === AuditAction.DELETE) return null;
     
     if (log.boardId) {
+      if (log.entityType === EntityType.TASK) {
+        return `/boards/${log.boardId}?taskId=${log.entityId}`;
+      }
       return `/boards/${log.boardId}`;
     }
     
@@ -117,24 +120,26 @@ export function RecentActivity({ logs }: RecentActivityProps) {
 
               {/* Entity title — what was changed */}
               {log.entityTitle && (
-                <div className="flex items-center gap-1.5 text-sm font-medium text-foreground/80 group-hover:text-primary transition-colors">
+                <div className="flex items-center gap-1.5 text-sm font-bold text-primary group-hover:underline transition-all">
                   <span>&quot;{log.entityTitle}&quot;</span>
                   {href && (
-                    <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+                    <ExternalLink className="h-3 w-3 opacity-60" />
                   )}
                 </div>
               )}
 
               {/* Board context — on which board */}
               {log.boardTitle && log.entityType !== "BOARD" && (
-                <div className="text-xs text-muted-foreground">
-                  {t("onBoard")}{" "}
-                  <span className="font-medium text-foreground/70">{log.boardTitle}</span>
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  <span>{t("onBoard")}</span>
+                  <span className="font-semibold text-foreground/80 underline decoration-muted-foreground/30 underline-offset-2">
+                    {log.boardTitle}
+                  </span>
                 </div>
               )}
 
               {/* Timestamp */}
-              <div className="text-[10px] text-muted-foreground mt-0.5">
+              <div className="text-[10px] text-muted-foreground mt-0.5 font-medium">
                 {formatDistanceToNow(new Date(log.createdAt), {
                   addSuffix: true,
                   locale: dateLocale,
@@ -146,19 +151,22 @@ export function RecentActivity({ logs }: RecentActivityProps) {
           return (
             <div key={log.id} className="relative pl-6 pb-6 last:pb-0 group">
               {/* Timeline line */}
-              <div className="absolute left-[11px] top-2 bottom-0 w-[2px] bg-muted last:hidden" />
+              <div className="absolute left-[11px] top-2 bottom-0 w-[2px] bg-muted group-hover:bg-primary/20 transition-colors last:hidden" />
               
               {/* Action Icon */}
-              <div className="absolute left-0 top-1 flex h-6 w-6 items-center justify-center rounded-full border bg-background shadow-sm z-10">
+              <div className="absolute left-0 top-1 flex h-6 w-6 items-center justify-center rounded-full border bg-background shadow-sm z-10 group-hover:border-primary/50 group-hover:scale-110 transition-all">
                 {getActionIcon(log.action)}
               </div>
 
               {href ? (
-                <Link href={href} className="block rounded-lg px-3 py-2 -mx-1 hover:bg-muted/50 transition-colors cursor-pointer">
+                <Link 
+                  href={href} 
+                  className="block rounded-xl px-4 py-3 -mx-2 hover:bg-primary/5 hover:shadow-sm border border-transparent hover:border-primary/10 transition-all cursor-pointer"
+                >
                   {content}
                 </Link>
               ) : (
-                <div className="px-3 py-2 -mx-1">
+                <div className="px-4 py-3 -mx-2">
                   {content}
                 </div>
               )}
