@@ -66,6 +66,7 @@ export function ColumnView({ column, index, boardId, members, allLabels, boardOw
           {...provided.draggableProps}
           ref={provided.innerRef}
           className="w-80 shrink-0 h-full flex flex-col"
+          data-testid="column"
         >
           <Card className="flex flex-col h-full bg-muted/50 border-none shadow-none">
             <CardHeader 

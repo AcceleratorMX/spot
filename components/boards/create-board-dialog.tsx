@@ -50,7 +50,7 @@ export function CreateBoardDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button id="create-board-trigger">
+        <Button data-testid="create-board-trigger">
           <Plus className="mr-2 h-4 w-4" />
           {t("newBoard")}
         </Button>

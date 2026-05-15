@@ -77,7 +77,7 @@ export function TaskCard({ task, index, boardId, members, allLabels, boardOwnerI
               snapshot.isDragging ? "shadow-lg" : ""
             }`}
           >
-            <Card className="bg-background border-muted-foreground/20 hover:border-primary/50 transition-colors cursor-pointer">
+            <Card className="bg-background border-muted-foreground/20 hover:border-primary/50 transition-colors cursor-pointer" data-testid="task-card">
               <CardContent className="p-3 space-y-3">
                 <div className="flex flex-wrap gap-1 mb-2">
                   {task.labels.map((l) => (

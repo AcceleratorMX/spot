@@ -47,6 +47,7 @@ export function ConfirmDialog({
           <AlertDialogAction asChild>
             <Button
               variant={variant === "destructive" ? "destructive" : "default"}
+              id="confirm-button"
               onClick={(e) => {
                 e.preventDefault();
                 onConfirm();
