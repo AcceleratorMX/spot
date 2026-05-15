@@ -18,7 +18,7 @@ type AuditLogWithUser = Prisma.AuditLogGetPayload<{
       };
     };
   };
-}>;
+}> & { boardId?: string | null };
 
 interface RecentActivityProps {
   logs: AuditLogWithUser[];
@@ -78,11 +78,11 @@ export function RecentActivity({ logs }: RecentActivityProps) {
   const getEntityLink = (log: AuditLogWithUser) => {
     if (log.action === AuditAction.DELETE) return null;
     
-    if (log.entityType === EntityType.BOARD) {
-      return `/boards/${log.entityId}`;
+    // We enriched the log with boardId in the server action
+    if (log.boardId) {
+      return `/boards/${log.boardId}`;
     }
-    // For tasks and columns, we don't have direct links yet, but we could link to the board if we had boardId in metadata.
-    // For now, only link boards.
+    
     return null;
   };
 
