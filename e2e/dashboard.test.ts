@@ -47,7 +47,7 @@ test.describe("Dashboard Page", () => {
 
   test("should create a board and show it in activity", async ({ page }) => {
     // Click create board button
-    await page.locator("#create-board-trigger").first().click();
+    await page.getByTestId("create-board-trigger").first().click();
     await page.locator("#title").fill("E2E Test Board");
     // Click submit button in dialog
     await page.locator("#create-board-submit").click();

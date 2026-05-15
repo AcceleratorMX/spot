@@ -4,8 +4,10 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Settings, Plus, Trash2, UserMinus, UserPlus } from "lucide-react";
 import { createLabel, deleteLabel } from "@/app/actions/labels";
-import { updateBoard, inviteMember, removeMember } from "@/app/actions/boards";
+import { updateBoard, inviteMember, removeMember, deleteBoard } from "@/app/actions/boards";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useRouter } from "@/i18n/navigation";
 
 import {
   Dialog,
@@ -55,6 +57,19 @@ export function BoardSettingsDialog({
   const [newLabelColor, setNewLabelColor] = useState("#3b82f6");
   const [inviteEmail, setInviteEmail] = useState("");
   const t = useTranslations("boards");
+  const router = useRouter();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  const handleDeleteBoard = async () => {
+    setLoading(true);
+    const result = await deleteBoard(board.id);
+    if (result.success) {
+      router.push("/boards");
+    } else {
+      setLoading(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   const handleCreateLabel = async () => {
     if (!newLabelName.trim()) return;
@@ -260,7 +275,41 @@ export function BoardSettingsDialog({
               </Button>
             </div>
           </div>
+
+          {/* Danger Zone */}
+          <div className="border-t pt-6 space-y-4">
+            <Label className="text-base font-semibold text-destructive">Danger Zone</Label>
+            <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-semibold">{t("deleteBoard") || "Delete Board"}</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Once you delete a board, there is no going back. Please be certain.
+                  </p>
+                </div>
+                <Button 
+                  id="delete-board-button"
+                  variant="destructive" 
+                  size="sm"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={loading}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {t("deleteBoard") || "Delete Board"}
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <ConfirmDialog
+          open={showDeleteConfirm}
+          onOpenChange={setShowDeleteConfirm}
+          onConfirm={handleDeleteBoard}
+          title={t("deleteBoard") || "Delete Board"}
+          description={t("deleteConfirm") || "Are you sure you want to delete this board? This action cannot be undone."}
+          variant="destructive"
+        />
       </DialogContent>
     </Dialog>
   );

@@ -10,6 +10,9 @@ export default defineConfig({
     seed: "npx tsx prisma/seed.ts"
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // In Prisma 7, when using a driver adapter in the application, 
+    // this URL is ONLY used by the CLI (e.g. for migrations).
+    // Migrations require a direct (unpooled) connection.
+    url: process.env["DATABASE_URL_UNPOOLED"] || process.env["DATABASE_URL"],
   },
 });

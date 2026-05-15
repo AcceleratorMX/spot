@@ -31,7 +31,7 @@ test.describe("Member Management", () => {
     await registerAndSignIn(pageA, `A-${Date.now()}`);
 
     // 3. Create a board
-    await pageA.locator("#create-board-trigger").click();
+    await pageA.getByTestId("create-board-trigger").click();
     await pageA.locator("#title").fill("Team Board");
     await pageA.locator("#create-board-submit").click();
     await expect(pageA.getByRole("heading", { name: "Team Board" })).toBeVisible({ timeout: 10000 });
@@ -66,7 +66,7 @@ test.describe("Member Management", () => {
   test("should show error when inviting non-existent user", async ({ page }) => {
     await registerAndSignIn(page, `C-${Date.now()}`);
 
-    await page.locator("#create-board-trigger").click();
+    await page.getByTestId("create-board-trigger").click();
     await page.locator("#title").fill("Error Test Board");
     await page.locator("#create-board-submit").click();
     await expect(page.getByRole("heading", { name: "Error Test Board" })).toBeVisible({ timeout: 10000 });

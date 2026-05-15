@@ -30,7 +30,7 @@ test.describe("Task Dependencies and Graph", () => {
     await page.locator("#sidebar-nav-boards").click();
     await page.waitForURL("**/boards");
     
-    await page.locator("#create-board-trigger").first().click();
+    await page.getByTestId("create-board-trigger").first().click();
     await page.locator("#title").fill("Dependency Test Board");
     // Give a small delay for the dialog to settle on CI
     await page.waitForTimeout(500);

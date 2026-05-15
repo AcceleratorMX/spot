@@ -266,7 +266,7 @@ export function TaskDetailsDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" data-testid="task-details-dialog">
           <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="space-y-1">
               <DialogTitle>{t("taskTitle")}</DialogTitle>

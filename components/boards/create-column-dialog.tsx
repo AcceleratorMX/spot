@@ -38,7 +38,7 @@ export function CreateColumnDialog({ boardId }: CreateColumnDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full h-12 border-dashed">
+        <Button variant="outline" className="w-full h-12 border-dashed" id="add-column-trigger">
           <Plus className="mr-2 h-4 w-4" />
           {t("addColumn")}
         </Button>
