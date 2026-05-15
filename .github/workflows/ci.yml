@@ -30,6 +30,7 @@ jobs:
       DATABASE_URL: "postgresql://spot:spot@localhost:5432/spot"
       AUTH_SECRET: "ci-test-secret-at-least-32-chars-long"
       AUTH_URL: "http://localhost:3000"
+      NEXT_TELEMETRY_DISABLED: "1"
 
     steps:
       - name: Checkout code
@@ -88,12 +89,7 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
-
-      - name: Install Playwright OS deps
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
 
       - name: E2E tests
         run: pnpm test:e2e

@@ -68,7 +68,22 @@
     "heading": "Dashboard",
     "subtitle": "Overview of your projects and boards",
     "noBoards": "No boards yet",
-    "createFirst": "Create your first board to get started"
+    "createFirst": "Create your first board to get started",
+    "welcome": "Welcome back, {name}!",
+    "stats": {
+      "totalBoards": "Total Boards",
+      "assignedTasks": "Assigned Tasks",
+      "upcomingDeadlines": "Upcoming Deadlines",
+      "highPriority": "High Priority"
+    },
+    "recentActivity": "Recent Activity",
+    "favoriteBoards": "Favorite Boards",
+    "myTasks": "My Tasks",
+    "noActivity": "No activity yet",
+    "noFavoriteBoards": "You don't have any favorite boards yet",
+    "noTasks": "You don't have any assigned tasks yet",
+    "viewAllBoards": "View all boards",
+    "viewAllTasks": "View all tasks"
   },
   "profile": {
     "personalInfo": "Personal Information",

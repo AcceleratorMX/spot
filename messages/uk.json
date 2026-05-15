@@ -68,7 +68,22 @@
     "heading": "Панель",
     "subtitle": "Огляд ваших проєктів та дошок",
     "noBoards": "Ще немає дошок",
-    "createFirst": "Створіть першу дошку, щоб почати"
+    "createFirst": "Створіть першу дошку, щоб почати",
+    "welcome": "Вітаємо, {name}!",
+    "stats": {
+      "totalBoards": "Всього дошок",
+      "assignedTasks": "Призначено завдань",
+      "upcomingDeadlines": "Найближчі дедлайни",
+      "highPriority": "Високий пріоритет"
+    },
+    "recentActivity": "Остання активність",
+    "favoriteBoards": "Улюблені дошки",
+    "myTasks": "Мої завдання",
+    "noActivity": "Активності поки немає",
+    "noFavoriteBoards": "У вас ще немає улюблених дошок",
+    "noTasks": "У вас поки немає призначених завдань",
+    "viewAllBoards": "Переглянути всі дошки",
+    "viewAllTasks": "Переглянути всі завдання"
   },
   "profile": {
     "personalInfo": "Персональна інформація",
